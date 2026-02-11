@@ -67,31 +67,31 @@ We are developing a full-stack "Smart Study Planner" that automates the scheduli
             Calendar[Calendar Component]
         end
 
-    subgraph Server_Side ["Backend (Next.js API Routes)"]
-        Auth[Auth Middleware (JWT)]
-        TaskAPI[Task Management API]
-        AnalyticsAPI[Analytics Engine]
-        AI_Service[AI Prioritization Service]
-    end
-
-    subgraph External_Services ["Infrastructure & External"]
-        DB[(PostgreSQL Database)]
-        OpenAI[OpenAI GPT-4o API]
-    end
-
-    %% Data Flow Connections
-    UI -->|HTTPS Requests| Auth
-    Auth -->|Validated Request| TaskAPI
-    Auth -->|Validated Request| AnalyticsAPI
-
-    TaskAPI -->|CRUD Operations| DB
-    AnalyticsAPI -->|Query Logs| DB
-
-    TaskAPI -->|Send Task Prompt| AI_Service
-    AI_Service -->|Request Priority| OpenAI
-    OpenAI -->|Return JSON| AI_Service
-
-    Timer -->|Sync Session Data| AnalyticsAPI
+        subgraph Server_Side ["Backend (Next.js API Routes)"]
+            Auth[Auth Middleware (JWT)]
+            TaskAPI[Task Management API]
+            AnalyticsAPI[Analytics Engine]
+            AI_Service[AI Prioritization Service]
+        end
+    
+        subgraph External_Services ["Infrastructure & External"]
+            DB[(PostgreSQL Database)]
+            OpenAI[OpenAI GPT-4o API]
+        end
+    
+        %% Data Flow Connections
+        UI -->|HTTPS Requests| Auth
+        Auth -->|Validated Request| TaskAPI
+        Auth -->|Validated Request| AnalyticsAPI
+    
+        TaskAPI -->|CRUD Operations| DB
+        AnalyticsAPI -->|Query Logs| DB
+    
+        TaskAPI -->|Send Task Prompt| AI_Service
+        AI_Service -->|Request Priority| OpenAI
+        OpenAI -->|Return JSON| AI_Service
+    
+        Timer -->|Sync Session Data| AnalyticsAPI
 
 ### 5.2 Architecture Explanation
 
