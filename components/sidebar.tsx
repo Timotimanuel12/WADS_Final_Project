@@ -5,13 +5,16 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   LayoutDashboard, Calendar as CalendarIcon, ListTodo, Timer, 
-  Plus, Moon, HelpCircle, BrainCircuit, LogOut
+  Plus, Moon, Sun, HelpCircle, BrainCircuit, LogOut, Settings
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
+import { useTheme } from "next-themes"; 
 
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
+  // 2. Initialize the hook
+  const { theme, setTheme } = useTheme(); 
 
   return (
     <aside className="w-64 border-r bg-muted/10 hidden md:flex flex-col h-full">
@@ -29,6 +32,7 @@ export default function Sidebar() {
           >
             <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
           </Button>
+          
           <Button 
             variant={pathname === '/calendar' ? 'secondary' : 'ghost'} 
             className="w-full justify-start font-semibold"
@@ -36,9 +40,15 @@ export default function Sidebar() {
           >
             <CalendarIcon className="mr-2 h-4 w-4" /> Calendar
           </Button>
-          <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground">
+          
+          <Button 
+            variant={pathname === '/activities' ? 'secondary' : 'ghost'} 
+            className="w-full justify-start font-semibold"
+            onClick={() => router.push('/activities')}
+          >
             <ListTodo className="mr-2 h-4 w-4" /> Activities
           </Button>
+
           <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground">
             <Timer className="mr-2 h-4 w-4" /> Focus Timer
           </Button>
@@ -50,7 +60,7 @@ export default function Sidebar() {
           <Button className="w-full justify-start shadow-sm" variant="default">
             <Plus className="mr-2 h-4 w-4" /> Add New Task
           </Button>
-          <Button className="w-full justify-start bg-indigo-50 text-indigo-700 hover:bg-indigo-100 shadow-none">
+          <Button className="w-full justify-start bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 shadow-none">
             <BrainCircuit className="mr-2 h-4 w-4" /> Enable AI Auto-Plan
           </Button>
         </div>
@@ -58,9 +68,33 @@ export default function Sidebar() {
 
       <div className="p-4 mt-auto">
         <Separator className="mb-4" />
-        <Button variant="ghost" className="w-full justify-start text-muted-foreground">
-          <Moon className="mr-2 h-4 w-4" /> Dark Mode
+        
+        {/* Added Settings Button Here */}
+        <Button 
+          variant={pathname === '/settings' ? 'secondary' : 'ghost'} 
+          className="w-full justify-start text-muted-foreground mb-1"
+          onClick={() => router.push('/settings')}
+        >
+          <Settings className="mr-2 h-4 w-4" /> Settings
         </Button>
+
+        {/* 3. The Toggle Button */}
+        <Button 
+          variant="ghost" 
+          className="w-full justify-start text-muted-foreground"
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        >
+          {theme === "dark" ? (
+            <>
+              <Sun className="mr-2 h-4 w-4" /> Light Mode
+            </>
+          ) : (
+            <>
+              <Moon className="mr-2 h-4 w-4" /> Dark Mode
+            </>
+          )}
+        </Button>
+        
         <Button variant="ghost" className="w-full justify-start text-muted-foreground" onClick={() => router.push('/')}>
           <LogOut className="mr-2 h-4 w-4" /> Log Out
         </Button>
