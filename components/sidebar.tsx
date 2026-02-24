@@ -13,14 +13,13 @@ import { useTheme } from "next-themes";
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
-  // 2. Initialize the hook
   const { theme, setTheme } = useTheme(); 
 
   return (
     <aside className="w-64 border-r bg-muted/10 hidden md:flex flex-col h-full">
       <div className="p-6 flex items-center gap-3">
         <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold">F</div>
-        <h1 className="text-xl font-bold tracking-tight">FocusFlow</h1>
+        <h1 className="text-xl font-bold tracking-tight">HelpImTooLazy</h1>
       </div>
 
       <ScrollArea className="flex-1 px-4">
@@ -69,7 +68,6 @@ export default function Sidebar() {
       <div className="p-4 mt-auto">
         <Separator className="mb-4" />
         
-        {/* Added Settings Button Here */}
         <Button 
           variant={pathname === '/settings' ? 'secondary' : 'ghost'} 
           className="w-full justify-start text-muted-foreground mb-1"
@@ -78,7 +76,6 @@ export default function Sidebar() {
           <Settings className="mr-2 h-4 w-4" /> Settings
         </Button>
 
-        {/* 3. The Toggle Button */}
         <Button 
           variant="ghost" 
           className="w-full justify-start text-muted-foreground"
