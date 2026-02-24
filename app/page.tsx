@@ -11,8 +11,10 @@ export default function HomePage() {
         <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-gradient-to-br from-purple-200/40 to-amber-200/40 blur-3xl" />
 
         <div className="mx-auto flex min-h-screen max-w-6xl flex-col items-center justify-center px-6 py-16">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 shadow-sm">
-            Focus Smarter
+          <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white/70 px-6 py-3 text-sm font-semibold tracking-[0.2em] text-slate-600 shadow-sm">
+            <span>Focus Smarter,</span>
+            <span>Study Harder,</span>
+            <span>Achieve Better.</span>
           </div>
 
           <h1 className={`${spaceGrotesk.className} text-center text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl`}>

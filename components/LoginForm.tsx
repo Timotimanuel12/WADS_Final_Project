@@ -157,7 +157,7 @@ export default function LoginForm() {
               setIsSwitchingMode(false);
             }, 250);
           }}
-          className="text-indigo-600 font-semibold hover:text-indigo-700"
+          className="text-indigo-600 font-semibold transition-all duration-150 hover:text-indigo-700 hover:underline hover:underline-offset-2 active:scale-95 active:text-indigo-800"
           disabled={loading || isSwitchingMode}
         >
           {isRegisterMode ? 'Sign In' : 'Create one'}
