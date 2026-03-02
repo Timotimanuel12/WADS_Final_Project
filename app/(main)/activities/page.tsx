@@ -39,7 +39,7 @@ export default function ActivitiesPage() {
 
       {/* Controls & Grid */}
       <div className="p-8 max-w-7xl mx-auto w-full space-y-6">
-        
+
         {/* Toolbar */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-background p-2 rounded-lg border shadow-sm">
           <Tabs defaultValue="All" className="w-full sm:w-auto" onValueChange={setFilter}>
@@ -74,7 +74,7 @@ export default function ActivitiesPage() {
             />
           ))}
         </div>
-        
+
         {filteredActivities.length === 0 && (
           <div className="text-center py-20 text-muted-foreground">
             No activities found for this filter.

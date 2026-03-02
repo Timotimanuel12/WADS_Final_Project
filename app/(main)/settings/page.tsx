@@ -15,7 +15,7 @@ export default function SettingsPage() {
 
       <div className="p-8 max-w-5xl mx-auto w-full">
         <Tabs defaultValue="profile" className="flex flex-col md:flex-row gap-8 w-full">
-          
+
           {/* Left-side Navigation for Settings */}
           <TabsList className="flex flex-col h-auto bg-transparent space-y-2 w-full md:w-64 items-start justify-start p-0">
             <TabsTrigger value="profile" className="w-full justify-start gap-2 data-[state=active]:bg-muted/50 data-[state=active]:shadow-none px-4 py-2.5">
@@ -58,9 +58,9 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
             </TabsContent>
-            
+
             {/* You can add more TabsContent for Notifications and Security later! */}
-            
+
           </div>
         </Tabs>
       </div>

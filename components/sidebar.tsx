@@ -3,17 +3,20 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  LayoutDashboard, Calendar as CalendarIcon, ListTodo, Timer, 
+import {
+  LayoutDashboard, Calendar as CalendarIcon, ListTodo, Timer,
   Plus, Moon, Sun, HelpCircle, BrainCircuit, LogOut, Settings
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
-import { useTheme } from "next-themes"; 
+import { useTheme } from "next-themes";
+import { AddTaskModal } from "./AddTaskModal";
+import * as React from "react";
 
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme(); 
+  const { theme, setTheme } = useTheme();
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
 
   return (
     <aside className="w-64 border-r bg-muted/10 hidden md:flex flex-col h-full">
@@ -24,31 +27,35 @@ export default function Sidebar() {
 
       <ScrollArea className="flex-1 px-4">
         <div className="space-y-1 mb-6">
-          <Button 
-            variant={pathname === '/dashboard' ? 'secondary' : 'ghost'} 
+          <Button
+            variant={pathname === '/dashboard' ? 'secondary' : 'ghost'}
             className="w-full justify-start font-semibold"
             onClick={() => router.push('/dashboard')}
           >
             <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
           </Button>
-          
-          <Button 
-            variant={pathname === '/calendar' ? 'secondary' : 'ghost'} 
+
+          <Button
+            variant={pathname === '/calendar' ? 'secondary' : 'ghost'}
             className="w-full justify-start font-semibold"
             onClick={() => router.push('/calendar')}
           >
             <CalendarIcon className="mr-2 h-4 w-4" /> Calendar
           </Button>
-          
-          <Button 
-            variant={pathname === '/activities' ? 'secondary' : 'ghost'} 
+
+          <Button
+            variant={pathname === '/activities' ? 'secondary' : 'ghost'}
             className="w-full justify-start font-semibold"
             onClick={() => router.push('/activities')}
           >
             <ListTodo className="mr-2 h-4 w-4" /> Activities
           </Button>
 
-          <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground">
+          <Button
+            variant={pathname === '/focus' ? 'secondary' : 'ghost'}
+            className="w-full justify-start text-muted-foreground hover:text-foreground"
+            onClick={() => router.push('/focus')}
+          >
             <Timer className="mr-2 h-4 w-4" /> Focus Timer
           </Button>
         </div>
@@ -56,7 +63,7 @@ export default function Sidebar() {
         <Separator className="mb-6" />
 
         <div className="space-y-2">
-          <Button className="w-full justify-start shadow-sm" variant="default">
+          <Button className="w-full justify-start shadow-sm" variant="default" onClick={() => setIsModalOpen(true)}>
             <Plus className="mr-2 h-4 w-4" /> Add New Task
           </Button>
           <Button className="w-full justify-start bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 shadow-none">
@@ -67,17 +74,17 @@ export default function Sidebar() {
 
       <div className="p-4 mt-auto">
         <Separator className="mb-4" />
-        
-        <Button 
-          variant={pathname === '/settings' ? 'secondary' : 'ghost'} 
+
+        <Button
+          variant={pathname === '/settings' ? 'secondary' : 'ghost'}
           className="w-full justify-start text-muted-foreground mb-1"
           onClick={() => router.push('/settings')}
         >
           <Settings className="mr-2 h-4 w-4" /> Settings
         </Button>
 
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           className="w-full justify-start text-muted-foreground"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         >
@@ -91,11 +98,13 @@ export default function Sidebar() {
             </>
           )}
         </Button>
-        
+
         <Button variant="ghost" className="w-full justify-start text-muted-foreground" onClick={() => router.push('/')}>
           <LogOut className="mr-2 h-4 w-4" /> Log Out
         </Button>
       </div>
+
+      <AddTaskModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </aside>
   );
 }

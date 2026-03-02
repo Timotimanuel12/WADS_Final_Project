@@ -102,11 +102,11 @@ export default function CalendarPage() {
                         <>
                           <div className="absolute top-[80px] left-1 right-1 h-[155px] bg-red-50 border border-red-200 rounded-md p-2 shadow-sm z-20 overflow-hidden">
                             <p className="text-xs font-bold text-red-700 mb-1">Calculus Exam Prep</p>
-                            <p className="text-[10px] text-red-600/80 flex items-center"><Clock className="w-3 h-3 mr-1"/> 10am-12pm</p>
+                            <p className="text-[10px] text-red-600/80 flex items-center"><Clock className="w-3 h-3 mr-1" /> 10am-12pm</p>
                           </div>
                           <div className="absolute top-[400px] left-1 right-1 h-[75px] bg-blue-50 border border-blue-200 rounded-md p-2 shadow-sm z-20 overflow-hidden">
                             <p className="text-xs font-bold text-blue-700 mb-1">History Essay</p>
-                            <p className="text-[10px] text-blue-600/80 flex items-center"><Clock className="w-3 h-3 mr-1"/> 2pm-3pm</p>
+                            <p className="text-[10px] text-blue-600/80 flex items-center"><Clock className="w-3 h-3 mr-1" /> 2pm-3pm</p>
                           </div>
                         </>
                       )}
@@ -125,14 +125,12 @@ export default function CalendarPage() {
                     <div className="w-16 text-right pt-1">
                       <span className="text-xs font-bold text-muted-foreground">{event.time}</span>
                     </div>
-                    <div className={`w-3 h-3 mt-1.5 rounded-full border-2 bg-background z-10 ${
-                      event.type === 'urgent' ? 'border-red-500' : 
-                      event.type === 'high' ? 'border-blue-500' : 'border-green-500'
-                    }`} />
-                    <div className={`flex-1 p-4 rounded-xl border shadow-sm ${
-                      event.type === 'urgent' ? 'bg-red-50/50 border-red-100' : 
-                      event.type === 'high' ? 'bg-blue-50/50 border-blue-100' : 'bg-green-50/50 border-green-100'
-                    }`}>
+                    <div className={`w-3 h-3 mt-1.5 rounded-full border-2 bg-background z-10 ${event.type === 'urgent' ? 'border-red-500' :
+                        event.type === 'high' ? 'border-blue-500' : 'border-green-500'
+                      }`} />
+                    <div className={`flex-1 p-4 rounded-xl border shadow-sm ${event.type === 'urgent' ? 'bg-red-50/50 border-red-100' :
+                        event.type === 'high' ? 'bg-blue-50/50 border-blue-100' : 'bg-green-50/50 border-green-100'
+                      }`}>
                       <h4 className="font-semibold text-foreground">{event.title}</h4>
                       <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                         <span className="flex items-center"><Clock className="w-3.5 h-3.5 mr-1" /> {event.duration}</span>

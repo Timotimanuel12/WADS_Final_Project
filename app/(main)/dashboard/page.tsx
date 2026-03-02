@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
+import {
   RefreshCw, Play, Settings, CheckCircle, Flame, Clock, BrainCircuit, AlertCircle, Circle
 } from "lucide-react";
 
@@ -31,7 +31,7 @@ export default function DashboardPage() {
       {/* CENTER COLUMN: MAIN DASHBOARD */}
       <ScrollArea className="flex-1 bg-muted/5">
         <div className="p-8 max-w-5xl mx-auto space-y-8">
-          
+
           <header className="flex justify-between items-center">
             <div className="flex items-baseline gap-2">
               <h2 className="text-3xl font-bold tracking-tight text-foreground">1:50 PM</h2>
@@ -92,7 +92,7 @@ export default function DashboardPage() {
                   <TabsTrigger value="incomplete">Incomplete</TabsTrigger>
                   <TabsTrigger value="completed">Completed</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="urgent" className="space-y-3">
                   {urgentTasks.map(task => <TaskRow key={task.id} task={task} />)}
                 </TabsContent>

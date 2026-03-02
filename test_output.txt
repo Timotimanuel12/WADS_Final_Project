@@ -1,0 +1,401 @@
+﻿
+> my-first-next-app@0.1.0 test
+> jest --colors=false
+
+node.exe : FAIL compone
+nts/LoginForm.test.tsx
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (FAIL componen   
+ ts/LoginForm.test.    
+tsx:String) [], Re    
+moteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+  ΓùÅ LoginForm 
+Component ΓÇ║ renders 
+the login form heading
+
+    invariant expected 
+app router to be 
+mounted
+
+    [0m [90m 13 
+|[39m   
+[36mconst[39m 
+[loading[33m,[39m 
+setLoading] 
+[33m=[39m useState([
+36mfalse[39m)[33m;[3
+9m
+     [90m 14 |[39m
+    [31m[1m>[22m[39
+m[90m 15 |[39m   
+[36mconst[39m router 
+[33m=[39m 
+useRouter()[33m;[39m
+     [90m    |[39m   
+                       
+ [31m[1m^[22m[39m
+     [90m 16 |[39m
+     [90m 17 |[39m   
+[36mconst[39m 
+handleLogin 
+[33m=[39m 
+[36masync[39m 
+(e[33m:[39m [33mReac
+t[39m[33m.[39m[33mF
+ormEvent[39m) 
+[33m=>[39m {
+     [90m 18 |[39m   
+  e[33m.[39mpreventDe
+fault()[33m;[39m[0m
+
+      at useRouter (nod
+e_modules/next/src/clie
+nt/components/navigatio
+n.ts:149:11)
+      at LoginForm (com
+ponents/LoginForm.tsx:1
+5:27)
+      at Object.react_s
+tack_bottom_frame (node
+_modules/react-dom/cjs/
+react-dom-client.develo
+pment.js:25904:20)
+      at 
+renderWithHooks (node_m
+odules/react-dom/cjs/re
+act-dom-client.developm
+ent.js:7662:22)
+      at updateFunction
+Component (node_modules
+/react-dom/cjs/react-do
+m-client.development.js
+:10166:19)
+      at beginWork (nod
+e_modules/react-dom/cjs
+/react-dom-client.devel
+opment.js:11778:18)
+      at 
+runWithFiberInDEV (node
+_modules/react-dom/cjs/
+react-dom-client.develo
+pment.js:874:13)
+      at 
+performUnitOfWork (node
+_modules/react-dom/cjs/
+react-dom-client.develo
+pment.js:17641:22)
+      at workLoopSync (
+node_modules/react-dom/
+cjs/react-dom-client.de
+velopment.js:17469:41)
+      at 
+renderRootSync (node_mo
+dules/react-dom/cjs/rea
+ct-dom-client.developme
+nt.js:17450:11)
+      at 
+performWorkOnRoot (node
+_modules/react-dom/cjs/
+react-dom-client.develo
+pment.js:16583:35)
+      at performWorkOnR
+ootViaSchedulerTask (no
+de_modules/react-dom/cj
+s/react-dom-client.deve
+lopment.js:18957:7)
+      at flushActQueue 
+(node_modules/react/cjs
+/react.development.js:5
+90:34)
+      at process.env.NO
+DE_ENV.exports.act (nod
+e_modules/react/cjs/rea
+ct.development.js:884:1
+0)
+      at node_modules/@
+testing-library/react/d
+ist/act-compat.js:46:25
+      at renderRoot (no
+de_modules/@testing-lib
+rary/react/dist/pure.js
+:189:26)
+      at render (node_m
+odules/@testing-library
+/react/dist/pure.js:291
+:10)
+      at 
+Object.<anonymous> (com
+ponents/LoginForm.test.
+tsx:8:11)
+
+  ΓùÅ LoginForm 
+Component ΓÇ║ contains 
+email and password 
+inputs
+
+    invariant expected 
+app router to be 
+mounted
+
+    [0m [90m 13 
+|[39m   
+[36mconst[39m 
+[loading[33m,[39m 
+setLoading] 
+[33m=[39m useState([
+36mfalse[39m)[33m;[3
+9m
+     [90m 14 |[39m
+    [31m[1m>[22m[39
+m[90m 15 |[39m   
+[36mconst[39m router 
+[33m=[39m 
+useRouter()[33m;[39m
+     [90m    |[39m   
+                       
+ [31m[1m^[22m[39m
+     [90m 16 |[39m
+     [90m 17 |[39m   
+[36mconst[39m 
+handleLogin 
+[33m=[39m 
+[36masync[39m 
+(e[33m:[39m [33mReac
+t[39m[33m.[39m[33mF
+ormEvent[39m) 
+[33m=>[39m {
+     [90m 18 |[39m   
+  e[33m.[39mpreventDe
+fault()[33m;[39m[0m
+
+      at useRouter (nod
+e_modules/next/src/clie
+nt/components/navigatio
+n.ts:149:11)
+      at LoginForm (com
+ponents/LoginForm.tsx:1
+5:27)
+      at Object.react_s
+tack_bottom_frame (node
+_modules/react-dom/cjs/
+react-dom-client.develo
+pment.js:25904:20)
+      at 
+renderWithHooks (node_m
+odules/react-dom/cjs/re
+act-dom-client.developm
+ent.js:7662:22)
+      at updateFunction
+Component (node_modules
+/react-dom/cjs/react-do
+m-client.development.js
+:10166:19)
+      at beginWork (nod
+e_modules/react-dom/cjs
+/react-dom-client.devel
+opment.js:11778:18)
+      at 
+runWithFiberInDEV (node
+_modules/react-dom/cjs/
+react-dom-client.develo
+pment.js:874:13)
+      at 
+performUnitOfWork (node
+_modules/react-dom/cjs/
+react-dom-client.develo
+pment.js:17641:22)
+      at workLoopSync (
+node_modules/react-dom/
+cjs/react-dom-client.de
+velopment.js:17469:41)
+      at 
+renderRootSync (node_mo
+dules/react-dom/cjs/rea
+ct-dom-client.developme
+nt.js:17450:11)
+      at 
+performWorkOnRoot (node
+_modules/react-dom/cjs/
+react-dom-client.develo
+pment.js:16583:35)
+      at performWorkOnR
+ootViaSchedulerTask (no
+de_modules/react-dom/cj
+s/react-dom-client.deve
+lopment.js:18957:7)
+      at flushActQueue 
+(node_modules/react/cjs
+/react.development.js:5
+90:34)
+      at process.env.NO
+DE_ENV.exports.act (nod
+e_modules/react/cjs/rea
+ct.development.js:884:1
+0)
+      at node_modules/@
+testing-library/react/d
+ist/act-compat.js:46:25
+      at renderRoot (no
+de_modules/@testing-lib
+rary/react/dist/pure.js
+:189:26)
+      at render (node_m
+odules/@testing-library
+/react/dist/pure.js:291
+:10)
+      at 
+Object.<anonymous> (com
+ponents/LoginForm.test.
+tsx:14:11)
+
+  ΓùÅ LoginForm 
+Component ΓÇ║ renders 
+the Sign In button
+
+    invariant expected 
+app router to be 
+mounted
+
+    [0m [90m 13 
+|[39m   
+[36mconst[39m 
+[loading[33m,[39m 
+setLoading] 
+[33m=[39m useState([
+36mfalse[39m)[33m;[3
+9m
+     [90m 14 |[39m
+    [31m[1m>[22m[39
+m[90m 15 |[39m   
+[36mconst[39m router 
+[33m=[39m 
+useRouter()[33m;[39m
+     [90m    |[39m   
+                       
+ [31m[1m^[22m[39m
+     [90m 16 |[39m
+     [90m 17 |[39m   
+[36mconst[39m 
+handleLogin 
+[33m=[39m 
+[36masync[39m 
+(e[33m:[39m [33mReac
+t[39m[33m.[39m[33mF
+ormEvent[39m) 
+[33m=>[39m {
+     [90m 18 |[39m   
+  e[33m.[39mpreventDe
+fault()[33m;[39m[0m
+
+      at useRouter (nod
+e_modules/next/src/clie
+nt/components/navigatio
+n.ts:149:11)
+      at LoginForm (com
+ponents/LoginForm.tsx:1
+5:27)
+      at Object.react_s
+tack_bottom_frame (node
+_modules/react-dom/cjs/
+react-dom-client.develo
+pment.js:25904:20)
+      at 
+renderWithHooks (node_m
+odules/react-dom/cjs/re
+act-dom-client.developm
+ent.js:7662:22)
+      at updateFunction
+Component (node_modules
+/react-dom/cjs/react-do
+m-client.development.js
+:10166:19)
+      at beginWork (nod
+e_modules/react-dom/cjs
+/react-dom-client.devel
+opment.js:11778:18)
+      at 
+runWithFiberInDEV (node
+_modules/react-dom/cjs/
+react-dom-client.develo
+pment.js:874:13)
+      at 
+performUnitOfWork (node
+_modules/react-dom/cjs/
+react-dom-client.develo
+pment.js:17641:22)
+      at workLoopSync (
+node_modules/react-dom/
+cjs/react-dom-client.de
+velopment.js:17469:41)
+      at 
+renderRootSync (node_mo
+dules/react-dom/cjs/rea
+ct-dom-client.developme
+nt.js:17450:11)
+      at 
+performWorkOnRoot (node
+_modules/react-dom/cjs/
+react-dom-client.develo
+pment.js:16583:35)
+      at performWorkOnR
+ootViaSchedulerTask (no
+de_modules/react-dom/cj
+s/react-dom-client.deve
+lopment.js:18957:7)
+      at flushActQueue 
+(node_modules/react/cjs
+/react.development.js:5
+90:34)
+      at process.env.NO
+DE_ENV.exports.act (nod
+e_modules/react/cjs/rea
+ct.development.js:884:1
+0)
+      at node_modules/@
+testing-library/react/d
+ist/act-compat.js:46:25
+      at renderRoot (no
+de_modules/@testing-lib
+rary/react/dist/pure.js
+:189:26)
+      at render (node_m
+odules/@testing-library
+/react/dist/pure.js:291
+:10)
+      at 
+Object.<anonymous> (com
+ponents/LoginForm.test.
+tsx:20:11)
+
+PASS components/Activit
+yCard.test.tsx
+PASS components/Profile
+Settings.test.tsx
+PASS components/sidebar
+.test.tsx
+PASS components/AddTask
+Modal.test.tsx
+
+Test Suites: 1 failed, 
+4 passed, 5 total
+Tests:       3 failed, 
+11 passed, 14 total
+Snapshots:   0 total
+Time:        4.179 s
+Ran all test suites.
+

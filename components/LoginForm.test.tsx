@@ -2,8 +2,15 @@ import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import LoginForm from './LoginForm'
 
+// Mock next/navigation
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+  }),
+}));
+
 describe('LoginForm Component', () => {
-  
+
   it('renders the login form heading', () => {
     render(<LoginForm />)
     const heading = screen.getByRole('heading', { level: 1 })

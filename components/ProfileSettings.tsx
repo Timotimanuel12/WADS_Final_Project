@@ -48,7 +48,7 @@ export default function ProfileSettings() {
       {/* Preferences Section */}
       <div className="space-y-4 pt-4 border-t">
         <h3 className="text-lg font-medium">App Preferences</h3>
-        
+
         <div className="flex items-center justify-between rounded-lg border p-4 shadow-sm bg-card">
           <div className="space-y-0.5">
             <Label className="text-base">Focus Timer Sounds</Label>

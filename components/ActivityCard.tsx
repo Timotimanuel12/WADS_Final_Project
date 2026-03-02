@@ -43,7 +43,7 @@ export default function ActivityCard({ title, category, status, priority, type }
         <p className="text-sm text-muted-foreground mb-4">{category}</p>
 
         <div className="flex items-center justify-between mt-auto pt-4 border-t border-border/50">
-          <Badge 
+          <Badge
             variant={priority === "Urgent" ? "destructive" : priority === "High" ? "default" : "secondary"}
           >
             {priority}

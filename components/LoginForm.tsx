@@ -4,24 +4,24 @@ import { useState } from 'react';
 import { User, Lock, LogIn } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { useRouter } from 'next/navigation'; 
+import { useRouter } from 'next/navigation';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  const router = useRouter(); 
+
+  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault(); 
+    e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push('/dashboard'); 
+      router.push('/dashboard');
     } catch (err: any) {
       console.error(err);
       setError('Failed to log in. Please check your credentials.');
@@ -51,8 +51,8 @@ export default function LoginForm() {
           <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
           <div className="relative">
             <User className="absolute left-3 top-3 text-gray-400" size={18} />
-            <input 
-              type="email" 
+            <input
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -66,8 +66,8 @@ export default function LoginForm() {
           <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
           <div className="relative">
             <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
-            <input 
-              type="password" 
+            <input
+              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -77,8 +77,8 @@ export default function LoginForm() {
           </div>
         </div>
 
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           disabled={loading}
           className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
         >
