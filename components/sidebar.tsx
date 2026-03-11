@@ -1,20 +1,35 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   LayoutDashboard, Calendar as CalendarIcon, ListTodo, Timer, 
-  Plus, Moon, Sun, HelpCircle, BrainCircuit, LogOut, Settings
+  Plus, Moon, Sun, BrainCircuit, LogOut, Settings
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "next-themes"; 
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
+  const [loggingOut, setLoggingOut] = useState(false);
   // 2. Initialize the hook
   const { theme, setTheme } = useTheme(); 
+
+  const handleLogout = async () => {
+    try {
+      setLoggingOut(true);
+      await signOut(auth);
+      router.replace('/login');
+    } catch (err: unknown) {
+      console.error(err);
+      setLoggingOut(false);
+    }
+  };
 
   return (
     <aside className="w-64 border-r bg-muted/10 hidden md:flex flex-col h-full">
@@ -49,7 +64,11 @@ export default function Sidebar() {
             <ListTodo className="mr-2 h-4 w-4" /> Activities
           </Button>
 
-          <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground">
+          <Button
+            variant={pathname === '/focus-timer' ? 'secondary' : 'ghost'}
+            className="w-full justify-start font-semibold"
+            onClick={() => router.push('/focus-timer')}
+          >
             <Timer className="mr-2 h-4 w-4" /> Focus Timer
           </Button>
         </div>
@@ -57,7 +76,11 @@ export default function Sidebar() {
         <Separator className="mb-6" />
 
         <div className="space-y-2">
-          <Button className="w-full justify-start shadow-sm" variant="default">
+          <Button
+            className="w-full justify-start shadow-sm"
+            variant="default"
+            onClick={() => router.push('/activities?new=1')}
+          >
             <Plus className="mr-2 h-4 w-4" /> Add New Task
           </Button>
           <Button className="w-full justify-start bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 shadow-none">
@@ -95,8 +118,8 @@ export default function Sidebar() {
           )}
         </Button>
         
-        <Button variant="ghost" className="w-full justify-start text-muted-foreground" onClick={() => router.push('/')}>
-          <LogOut className="mr-2 h-4 w-4" /> Log Out
+        <Button variant="ghost" className="w-full justify-start text-muted-foreground" onClick={handleLogout} disabled={loggingOut}>
+          <LogOut className="mr-2 h-4 w-4" /> {loggingOut ? 'Signing Out...' : 'Log Out'}
         </Button>
       </div>
     </aside>

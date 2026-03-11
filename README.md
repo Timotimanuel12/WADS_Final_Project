@@ -128,12 +128,13 @@ The system is built on a **Client-Server Architecture** utilizing the Next.js fr
 | Method     | Endpoint             | Description                                                | Auth Required |
 | :--------- | :------------------- | :--------------------------------------------------------- | :------------ |
 | **POST**   | `/api/auth/register` | Registers a new user account.                              | No            |
-| **POST**   | `/api/auth/login`    | Authenticates user and returns JWT token.                  | No            |
+| **GET**    | `/api/auth/session`  | Validates Firebase ID token and returns user session info. | Yes           |
 | **GET**    | `/api/tasks`         | Retrieves all tasks for the logged-in user.                | Yes           |
 | **POST**   | `/api/tasks`         | Creates a new task.                                        | Yes           |
-| **PATCH**  | `/api/tasks/[id]`    | Updates a task (e.g., mark as complete).                   | Yes           |
+| **GET**    | `/api/tasks/[id]`    | Retrieves a specific task by ID.                           | Yes           |
+| **PUT**    | `/api/tasks/[id]`    | Updates task fields.                                       | Yes           |
 | **DELETE** | `/api/tasks/[id]`    | Deletes a specific task.                                   | Yes           |
-| **POST**   | `/api/ai/prioritize` | **AI Feature:** Analyzes task details to suggest priority. | Yes           |
+| **GET**    | `/api/sessions`      | Retrieves focus session logs for the logged-in user.       | Yes           |
 | **POST**   | `/api/sessions`      | Logs a completed study session (timer data).               | Yes           |
 | **GET**    | `/api/analytics`     | Retrieves productivity stats (e.g., total study hours).    | Yes           |
 

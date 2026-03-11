@@ -12,33 +12,33 @@ Based on `README.md` requirements and declared stack:
 ---
 
 ## Phase 0 — Project Setup & Alignment
-- [ ] Finalize feature scope for MVP (Smart Scheduling, Focus Timer, Progress Dashboard)
-- [ ] Define repository structure (`frontend`, `backend`, shared docs)
-- [ ] Set up environment variable strategy (`.env.example` for both frontend/backend)
-- [ ] Add coding standards (linting, formatting, branch naming, PR checklist)
-- [ ] Define Definition of Done per feature (UI, API, tests, security checks)
+- [x] Finalize feature scope for MVP (Smart Scheduling, Focus Timer, Progress Dashboard)
+- [x] Define repository structure (current single app + shared docs)
+- [x] Set up environment variable strategy (`.env.example`)
+- [x] Add coding standards (linting, formatting, branch naming, PR checklist)
+- [x] Define Definition of Done per feature (UI, API, tests, security checks)
 
 ## Phase 1 — UI Foundation (Next.js)
-- [ ] Build/clean core routes: login, dashboard, calendar, activities, settings
-- [ ] Connect reusable UI components consistently (cards, tabs, forms, buttons)
-- [ ] Add client-side state handling for temporary interactions
-- [ ] Add loading and empty states for each main page
-- [ ] Add basic responsive behavior for desktop/tablet/mobile
+- [x] Build/clean core routes: login, dashboard, calendar, activities, settings
+- [x] Connect reusable UI components consistently (cards, tabs, forms, buttons)
+- [x] Add client-side state handling for temporary interactions
+- [x] Add loading and empty states for each main page
+- [x] Add basic responsive behavior for desktop/tablet/mobile
 
 ## Phase 2 — Authentication (Firebase Auth + App Session)
-- [ ] Implement Firebase email/password + Google sign-in flows cleanly
-- [ ] Add protected route handling for authenticated pages
-- [ ] Implement backend JWT issuance/verification strategy (if separate backend token is used)
-- [ ] Add logout flow and session invalidation behavior
-- [ ] Add auth error handling and user-friendly messages
+- [x] Implement Firebase email/password + Google sign-in flows cleanly
+- [x] Add protected route handling for authenticated pages
+- [x] Implement backend JWT issuance/verification strategy (if separate backend token is used) (N/A in current frontend-only architecture)
+- [x] Add logout flow and session invalidation behavior
+- [x] Add auth error handling and user-friendly messages
 
-## Phase 3 — Backend API (Express + REST)
-- [ ] Initialize Express server with modular route structure
-- [ ] Implement `/api/auth/*` endpoints (register/login/session validation)
-- [ ] Implement `/api/tasks` CRUD endpoints
-- [ ] Implement `/api/sessions` logging endpoint for focus timer data
-- [ ] Implement `/api/analytics` aggregation endpoint
-- [ ] Add centralized error handler + consistent API response format
+## Phase 3 — Backend API (Next.js Route Handlers)
+- [x] Initialize modular route structure under `app/api/`
+- [x] Implement `/api/auth/*` endpoints (register `POST`, session validation `GET`)
+- [x] Implement `/api/tasks` CRUD endpoints (`GET`/`POST` + `GET`/`PUT`/`DELETE` by id)
+- [x] Implement `/api/sessions` logging endpoint for focus timer data
+- [x] Implement `/api/analytics` aggregation endpoint
+- [x] Add centralized error handler (`lib/api-response.ts`) + consistent API response format
 
 ## Phase 4 — Database Layer (PostgreSQL + Prisma)
 - [ ] Design Prisma schema (`User`, `Task`, `StudySession`, optional `Schedule`)

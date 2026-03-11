@@ -14,10 +14,10 @@ export default function SettingsPage() {
       </header>
 
       <div className="p-8 max-w-5xl mx-auto w-full">
-        <Tabs defaultValue="profile" className="flex flex-col md:flex-row gap-8 w-full">
+        <Tabs defaultValue="profile" orientation="vertical" className="flex-col md:flex-row gap-8 w-full">
           
           {/* Left-side Navigation for Settings */}
-          <TabsList className="flex flex-col h-auto bg-transparent space-y-2 w-full md:w-64 items-start justify-start p-0">
+          <TabsList variant="line" className="flex flex-col h-auto bg-transparent space-y-2 w-full md:w-64 items-start justify-start p-0">
             <TabsTrigger value="profile" className="w-full justify-start gap-2 data-[state=active]:bg-muted/50 data-[state=active]:shadow-none px-4 py-2.5">
               <User className="w-4 h-4" /> Profile & Account
             </TabsTrigger>
@@ -33,7 +33,7 @@ export default function SettingsPage() {
           </TabsList>
 
           {/* Right-side Content Panels */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <TabsContent value="profile" className="m-0 focus-visible:outline-none focus-visible:ring-0">
               <Card className="shadow-sm border-muted">
                 <CardHeader>
@@ -58,8 +58,30 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
             </TabsContent>
-            
-            {/* You can add more TabsContent for Notifications and Security later! */}
+
+            <TabsContent value="notifications" className="m-0 focus-visible:outline-none focus-visible:ring-0">
+              <Card className="shadow-sm border-muted">
+                <CardHeader>
+                  <CardTitle>Notifications</CardTitle>
+                  <CardDescription>Control reminder frequency and delivery channels.</CardDescription>
+                </CardHeader>
+                <CardContent className="h-40 flex items-center justify-center text-muted-foreground border-t">
+                  No notification preferences configured yet.
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="security" className="m-0 focus-visible:outline-none focus-visible:ring-0">
+              <Card className="shadow-sm border-muted">
+                <CardHeader>
+                  <CardTitle>Security</CardTitle>
+                  <CardDescription>Manage sign-in safety and account protection settings.</CardDescription>
+                </CardHeader>
+                <CardContent className="h-40 flex items-center justify-center text-muted-foreground border-t">
+                  Security controls will appear here once backend auth is connected.
+                </CardContent>
+              </Card>
+            </TabsContent>
             
           </div>
         </Tabs>

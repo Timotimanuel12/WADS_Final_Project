@@ -8,20 +8,32 @@ const LOADER_DELAY_MS = 350;
 export default function RouteLoadingOverlay() {
   const pathname = usePathname();
   const [visible, setVisible] = useState(true);
+  const showTimer = useRef<number | null>(null);
   const hideTimer = useRef<number | null>(null);
 
   useEffect(() => {
-    setVisible(true);
+    if (showTimer.current) {
+      window.clearTimeout(showTimer.current);
+    }
 
     if (hideTimer.current) {
       window.clearTimeout(hideTimer.current);
     }
+
+    // Schedule show/hide updates asynchronously to avoid synchronous state writes in effect body.
+    showTimer.current = window.setTimeout(() => {
+      setVisible(true);
+    }, 0);
 
     hideTimer.current = window.setTimeout(() => {
       setVisible(false);
     }, LOADER_DELAY_MS);
 
     return () => {
+      if (showTimer.current) {
+        window.clearTimeout(showTimer.current);
+      }
+
       if (hideTimer.current) {
         window.clearTimeout(hideTimer.current);
       }

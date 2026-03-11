@@ -14,8 +14,14 @@ jest.mock('@/lib/firebase', () => ({
 }))
 
 jest.mock('firebase/auth', () => ({
+  GoogleAuthProvider: jest.fn(),
   signInWithEmailAndPassword: jest.fn(),
   createUserWithEmailAndPassword: jest.fn(),
+  signInWithPopup: jest.fn(),
+  onAuthStateChanged: (_auth: unknown, callback: (user: unknown) => void) => {
+    callback(null)
+    return jest.fn()
+  },
 }))
 
 describe('LoginForm Component', () => {
@@ -28,8 +34,10 @@ describe('LoginForm Component', () => {
 
   it('contains email and password inputs', () => {
     render(<LoginForm />)
-    const emailInput = screen.getByPlaceholderText('alex@binus.ac.id')
+    const emailInput = screen.getByPlaceholderText('example@email.com')
+    const passwordInput = screen.getByPlaceholderText('password123')
     expect(emailInput).toBeInTheDocument()
+    expect(passwordInput).toBeInTheDocument()
   })
 
   it('renders the Sign In button', () => {
@@ -44,7 +52,7 @@ describe('LoginForm Component', () => {
 
     await user.click(screen.getByRole('button', { name: /create one/i }))
 
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Create Account')
-    expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: /create account/i })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /create account/i })).toBeInTheDocument()
   })
 })

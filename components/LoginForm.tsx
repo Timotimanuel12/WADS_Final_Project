@@ -1,15 +1,48 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Book, Chrome, Lock, LogIn, User, UserPlus } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
+  onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
 } from 'firebase/auth';
+import { FirebaseError } from 'firebase/app';
 import { useRouter } from 'next/navigation'; 
+
+function mapAuthError(err: unknown, isRegisterMode: boolean): string {
+  if (!(err instanceof FirebaseError)) {
+    return 'Unexpected authentication error. Please try again.';
+  }
+
+  switch (err.code) {
+    case 'auth/invalid-email':
+      return 'Please enter a valid email address.';
+    case 'auth/missing-password':
+      return 'Password is required.';
+    case 'auth/weak-password':
+      return 'Password is too weak. Use at least 6 characters.';
+    case 'auth/email-already-in-use':
+      return 'That email is already registered. Try signing in instead.';
+    case 'auth/invalid-credential':
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+      return 'Incorrect email or password.';
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Please wait a moment and try again.';
+    case 'auth/popup-closed-by-user':
+      return 'Google sign-in was cancelled.';
+    case 'auth/popup-blocked':
+      return 'Popup was blocked. Please allow popups and try again.';
+    default:
+      return isRegisterMode
+        ? 'Failed to create account. Please check your input and try again.'
+        : 'Failed to sign in. Please check your credentials.';
+  }
+}
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
@@ -18,8 +51,22 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [isSwitchingMode, setIsSwitchingMode] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   
   const router = useRouter(); 
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        router.replace('/dashboard');
+        return;
+      }
+
+      setCheckingAuth(false);
+    });
+
+    return () => unsubscribe();
+  }, [router]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault(); 
@@ -33,13 +80,9 @@ export default function LoginForm() {
         await signInWithEmailAndPassword(auth, email, password);
       }
       router.push('/dashboard'); 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(
-        isRegisterMode
-          ? 'Failed to create account. Please check your input and try again.'
-          : 'Failed to sign in. Please check your credentials.'
-      );
+      setError(mapAuthError(err, isRegisterMode));
     } finally {
       setLoading(false);
     }
@@ -53,13 +96,24 @@ export default function LoginForm() {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       router.push('/dashboard');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError('Failed to sign in with Google. Please try again.');
+      setError(mapAuthError(err, false));
     } finally {
       setLoading(false);
     }
   };
+
+  if (checkingAuth) {
+    return (
+      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+        <div className="flex items-center justify-center gap-3 text-indigo-700 font-semibold">
+          <span className="inline-block h-5 w-5 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin" />
+          Checking session...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg border border-gray-100 relative">
