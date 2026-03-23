@@ -22,9 +22,36 @@ async function apiFetch<T>(
       ...(options.headers ?? {}),
     },
   });
-  const json = (await res.json()) as { success: boolean; data?: T; error?: string };
-  if (!json.success) throw new Error(json.error ?? "API error");
-  return json.data as T;
+
+  // Robust JSON handling so we don't crash on empty/invalid responses
+  let rawBody: string | null = null;
+  try {
+    rawBody = await res.text();
+    if (!rawBody) {
+      throw new Error(`Empty response body (status ${res.status})`);
+    }
+
+    const json = JSON.parse(rawBody) as {
+      success: boolean;
+      data?: T;
+      error?: string;
+    };
+
+    if (!json.success) {
+      throw new Error(json.error ?? "API error");
+    }
+
+    return json.data as T;
+  } catch (err) {
+    // Surface a clearer, high-level error to the UI
+    console.error("Failed to parse API response", {
+      path,
+      status: res.status,
+      rawBody,
+      error: err,
+    });
+    throw new Error("Server returned an invalid response. Please try again.");
+  }
 }
 
 export type CreateTaskInput = {

@@ -1,7 +1,8 @@
 import { type NextRequest } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth-middleware";
 import { ok, err, notFound, forbidden } from "@/lib/api-response";
-import { tasks, type Task, VALID_STATUSES, VALID_PRIORITIES } from "@/lib/store";
+import { prisma } from "@/lib/prisma";
+import { VALID_STATUSES, VALID_PRIORITIES } from "@/lib/store";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -11,10 +12,17 @@ export async function GET(request: NextRequest, { params }: Params) {
   if (isAuthError(auth)) return auth;
 
   const { id } = await params;
-  const task = tasks.get(id);
+  const task = await prisma.task.findUnique({ where: { id } });
   if (!task) return notFound("Task not found");
   if (task.userId !== auth.userId) return forbidden();
-  return ok(task);
+
+  return ok({
+    ...task,
+    startTime: task.startTime.toISOString(),
+    endTime: task.endTime.toISOString(),
+    createdAt: task.createdAt.toISOString(),
+    updatedAt: task.updatedAt.toISOString(),
+  });
 }
 
 // PUT /api/tasks/[id] — update task fields (partial update)
@@ -23,7 +31,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
   if (isAuthError(auth)) return auth;
 
   const { id } = await params;
-  const task = tasks.get(id);
+  const task = await prisma.task.findUnique({ where: { id } });
   if (!task) return notFound("Task not found");
   if (task.userId !== auth.userId) return forbidden();
 
@@ -42,33 +50,37 @@ export async function PUT(request: NextRequest, { params }: Params) {
   if (typeof startTime === "string" && Number.isNaN(Date.parse(startTime))) return err("startTime must be a valid date");
   if (typeof endTime === "string" && Number.isNaN(Date.parse(endTime))) return err("endTime must be a valid date");
 
-  const nextStart = typeof startTime === "string" ? startTime : task.startTime;
-  const nextEnd = typeof endTime === "string" ? endTime : task.endTime;
-  if (new Date(nextStart) >= new Date(nextEnd)) {
+  const nextStart = typeof startTime === "string" ? new Date(startTime) : task.startTime;
+  const nextEnd = typeof endTime === "string" ? new Date(endTime) : task.endTime;
+  if (nextStart >= nextEnd) {
     return err("endTime must be after startTime");
   }
 
-  const updated: Task = {
-    ...task,
-    title:
-      typeof title === "string" && title.trim() ? title.trim() : task.title,
-    description:
-      typeof description === "string" ? description : task.description,
-    status: VALID_STATUSES.includes(status as Task["status"])
-      ? (status as Task["status"])
-      : task.status,
-    priority: VALID_PRIORITIES.includes(priority as Task["priority"])
-      ? (priority as Task["priority"])
-      : task.priority,
-    category: typeof category === "string" ? category : task.category,
-    course: typeof course === "string" ? course : task.course,
-    startTime: nextStart,
-    endTime: nextEnd,
-    updatedAt: new Date().toISOString(),
-  };
+  const updated = await prisma.task.update({
+    where: { id },
+    data: {
+      title: typeof title === "string" && title.trim() ? title.trim() : undefined,
+      description: typeof description === "string" ? description : undefined,
+      status: VALID_STATUSES.includes(status as (typeof VALID_STATUSES)[number])
+        ? (status as string)
+        : undefined,
+      priority: VALID_PRIORITIES.includes(priority as (typeof VALID_PRIORITIES)[number])
+        ? (priority as string)
+        : undefined,
+      category: typeof category === "string" ? category : undefined,
+      course: typeof course === "string" ? course : undefined,
+      startTime: nextStart,
+      endTime: nextEnd,
+    },
+  });
 
-  tasks.set(id, updated);
-  return ok(updated);
+  return ok({
+    ...updated,
+    startTime: updated.startTime.toISOString(),
+    endTime: updated.endTime.toISOString(),
+    createdAt: updated.createdAt.toISOString(),
+    updatedAt: updated.updatedAt.toISOString(),
+  });
 }
 
 // DELETE /api/tasks/[id]
@@ -77,10 +89,10 @@ export async function DELETE(request: NextRequest, { params }: Params) {
   if (isAuthError(auth)) return auth;
 
   const { id } = await params;
-  const task = tasks.get(id);
+  const task = await prisma.task.findUnique({ where: { id } });
   if (!task) return notFound("Task not found");
   if (task.userId !== auth.userId) return forbidden();
 
-  tasks.delete(id);
+  await prisma.task.delete({ where: { id } });
   return ok({ deleted: true });
 }
