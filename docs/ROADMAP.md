@@ -2,7 +2,7 @@
 
 Based on `README.md` requirements and declared stack:
 - Frontend: Next.js (App Router)
-- Backend: Node.js (Express)
+- Backend: Next.js Route Handlers (Node.js runtime)
 - API: REST
 - Database: PostgreSQL + Prisma ORM
 - Auth: Firebase Auth
@@ -55,32 +55,18 @@ Based on `README.md` requirements and declared stack:
 - [x] Document backup/restore runbook (pg_dump/restore) and verification cadence
 - [x] Add database observability baseline (slow-query logging + DB error monitoring)
 
-## Phase 4.5 — Settings Expansion (Post-MVP)
-- [ ] Add notification rules settings (deadline reminders, daily planning reminder, quiet hours)
-- [ ] Add calendar behavior settings (default view, week-start preference, show completed toggle)
-- [ ] Add focus timer defaults (focus/break duration presets, auto-start toggle)
-- [ ] Add account/privacy controls (data export, retention options, visibility summary)
-- [ ] Add appearance/accessibility settings (density, font size, reduced motion, contrast)
-
-## Phase 4.7 — Optional Dashboard Enhancements
-- [ ] Add Today Snapshot panel (due today count, urgent count, next planned item)
-- [ ] Add Quick Actions panel (add task, start focus, open AI plan, quick capture)
-- [ ] Add progress widgets (daily completion %, weekly streak, focus minutes today)
-- [ ] Add Smart Recommendation card (suggested next task from AI plan)
-- [ ] Add Overdue shortcut section for immediate triage
-- [ ] Add collapsible dashboard sections to keep layout clean at scale
-
 ## Phase 5 — Smart Scheduling + AI Integration
 - [ ] Define scheduling input/output contract (task list + constraints -> schedule)
-- [ ] Implement deterministic scheduling baseline algorithm first
+- [x] Implement deterministic scheduling baseline algorithm first
+- [x] Surface deterministic schedule in AI Plan page and calendar AI toggle
 - [ ] Add AI prioritization endpoint (`/api/ai/prioritize`)
 - [ ] Add burnout detection rule set + recommendation output
 - [ ] Add fallback behavior when AI service is unavailable
 - [ ] Add AI planning preferences (preferred hours, max sessions/day, break cadence) (SETTINGS)
 
 ## Phase 6 — Focus Timer + Progress Dashboard
-- [ ] Implement timer start/pause/reset/complete flow
-- [ ] Persist completed focus sessions to backend
+- [x] Implement timer start/pause/reset/complete flow
+- [x] Persist completed focus sessions to backend
 - [ ] Build dashboard metrics (completion rate, hours studied, streak)
 - [ ] Add weekly/monthly trend visualizations
 - [ ] Ensure analytics are user-scoped and time-filtered
@@ -93,7 +79,7 @@ Based on `README.md` requirements and declared stack:
 - [ ] Secure cookie/token handling strategy (HTTP-only where applicable)
 - [ ] Add security test checklist (IDOR, injection, auth bypass, input fuzzing)
 
-## Phase 7.5 — UX/Auth/API Hardening (Post-MVP)
+## Phase 8 — UX/Auth/API Hardening (Post-MVP)
 - [ ] Run accessibility pass (keyboard navigation, focus order, ARIA labels)
 - [ ] Polish responsive UI consistency (spacing, typography, empty/error states)
 - [ ] Improve session-expiry/token-refresh UX handling across protected pages
@@ -102,33 +88,50 @@ Based on `README.md` requirements and declared stack:
 - [ ] Standardize paginated API response metadata (`page`, `pageSize`, `total`)
 - [ ] Add consistent API error envelope + error-code mapping across all endpoints
 
-## Phase 8 — Testing & Quality
+## Phase 9 — Testing & Quality
 - [ ] Expand unit tests (components, utility functions)
 - [ ] Add backend integration tests for key API paths
 - [ ] Add end-to-end happy-path tests (login -> add task -> schedule -> complete session)
 - [ ] Add lint/typecheck/test scripts to CI pipeline
 - [ ] Add bug triage checklist and regression test matrix
 
-## Phase 9 — Containerization & Deployment
+## Phase 10 — Containerization & Deployment
 - [ ] Create Dockerfiles for frontend and backend
 - [ ] Create Docker Compose for local full-stack runs
 - [ ] Configure production env variables and secrets handling
 - [ ] Deploy frontend (e.g., Vercel) and backend (selected host)
 - [ ] Run post-deploy smoke tests and rollback plan
 
-## Phase 10 — Documentation & Final Delivery
+## Phase 11 — Documentation & Final Delivery
 - [ ] Update README with accurate run/setup instructions
 - [ ] Document API endpoints with request/response examples
 - [ ] Document architecture decisions and threat/security controls
 - [ ] Prepare demo script (feature flow + technical explanation)
 - [ ] Prepare final submission checklist (code, docs, evidence, test results)
 
+## Post-Delivery Backlog (Optional)
+
+### Phase 12 — Settings Expansion
+- [ ] Add notification rules settings (deadline reminders, daily planning reminder, quiet hours)
+- [ ] Add calendar behavior settings (default view, week-start preference, show completed toggle)
+- [ ] Add focus timer defaults (focus/break duration presets, auto-start toggle)
+- [ ] Add account/privacy controls (data export, retention options, visibility summary)
+- [ ] Add appearance/accessibility settings (density, font size, reduced motion, contrast)
+
+### Phase 13 — Dashboard Enhancements
+- [ ] Add Today Snapshot panel (due today count, urgent count, next planned item)
+- [ ] Add Quick Actions panel (add task, start focus, open AI plan, quick capture)
+- [ ] Add progress widgets (daily completion %, weekly streak, focus minutes today)
+- [ ] Add Smart Recommendation card (suggested next task from AI plan)
+- [ ] Add Overdue shortcut section for immediate triage
+- [ ] Add collapsible dashboard sections to keep layout clean at scale
+
 ---
 
 ## Suggested Milestone Order (MVP + Hardening)
 1. Phases 0–2 (foundation + auth)
 2. Phases 3–4 (API + DB core)
-3. Phase 6 (timer + dashboard with real data)
-4. Phase 5 (smart scheduling + AI)
-5. Phases 7 and 7.5 (security and UX/API hardening)
-6. Phases 8–10 (tests, deployment, final docs)
+3. Phases 5–6 (MVP completion: scheduling, timer, dashboard)
+4. Phases 7–8 (security and UX/API hardening)
+5. Phases 9–11 (tests, deployment, final docs)
+6. Post-delivery backlog (Phases 12–13)
