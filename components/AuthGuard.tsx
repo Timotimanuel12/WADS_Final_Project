@@ -5,6 +5,27 @@ import { onAuthStateChanged } from "firebase/auth";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+const PROFILE_SETUP_PATH = "/profile-setup";
+
+async function getProfileCompletionStatus(idToken: string): Promise<boolean> {
+  const res = await fetch("/api/auth/session", {
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to resolve auth session");
+  }
+
+  const payload = (await res.json()) as {
+    success: boolean;
+    data?: { profileCompleted?: boolean };
+  };
+
+  return Boolean(payload.data?.profileCompleted);
+}
+
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -12,12 +33,36 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        const next = encodeURIComponent(pathname || "/dashboard");
-        router.replace(`/login?next=${next}`);
-      }
+      const run = async () => {
+        if (!user) {
+          const next = encodeURIComponent(pathname || "/dashboard");
+          router.replace(`/login?next=${next}`);
+          setCheckingAuth(false);
+          return;
+        }
 
-      setCheckingAuth(false);
+        try {
+          const idToken = await user.getIdToken();
+          const profileCompleted = await getProfileCompletionStatus(idToken);
+
+          if (!profileCompleted && pathname !== PROFILE_SETUP_PATH) {
+            router.replace(PROFILE_SETUP_PATH);
+            return;
+          }
+
+          if (profileCompleted && pathname === PROFILE_SETUP_PATH) {
+            router.replace("/dashboard");
+            return;
+          }
+        } catch {
+          router.replace("/login");
+          return;
+        } finally {
+          setCheckingAuth(false);
+        }
+      };
+
+      void run();
     });
 
     return () => unsubscribe();

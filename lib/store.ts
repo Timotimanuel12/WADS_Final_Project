@@ -14,6 +14,10 @@ export type Task = {
   priority: TaskPriority;
   category: string;
   course: string;
+  taskLink: string | null;
+  attachmentName: string | null;
+  attachmentMimeType: string | null;
+  attachmentDataUrl: string | null;
   startTime: string;
   endTime: string;
   createdAt: string;

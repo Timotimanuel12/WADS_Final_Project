@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ActivityCard from "@/components/ActivityCard";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Loader2, ArrowUpDown, CheckCircle2, AlertCircle } from "lucide-react";
+import { Plus, Loader2, ArrowUpDown, CheckCircle2, AlertCircle, Link2, Paperclip, Upload, X } from "lucide-react";
 import { tasksApi, type Task, type TaskStatus, type TaskPriority } from "@/lib/api-client";
+
+const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 
 const API_TO_UI_STATUS: Record<TaskStatus, "Pending" | "In Progress" | "Completed"> = {
   pending: "Pending",
@@ -32,6 +34,10 @@ type FormState = {
   description: string;
   category: string;
   course: string;
+  taskLink: string;
+  attachmentName: string;
+  attachmentMimeType: string;
+  attachmentDataUrl: string;
   priority: TaskPriority;
   status: TaskStatus;
   startTime: string;
@@ -46,7 +52,18 @@ type ToastState = {
 } | null;
 
 const EMPTY_FORM: FormState = {
-  title: "", description: "", category: "", course: "", priority: "medium", status: "pending", startTime: "", endTime: "",
+  title: "",
+  description: "",
+  category: "",
+  course: "",
+  taskLink: "",
+  attachmentName: "",
+  attachmentMimeType: "",
+  attachmentDataUrl: "",
+  priority: "medium",
+  status: "pending",
+  startTime: "",
+  endTime: "",
 };
 
 const PRIORITY_WEIGHT: Record<TaskPriority, number> = {
@@ -69,6 +86,7 @@ export default function ActivitiesPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState<ToastState>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const loadTasks = useCallback(async () => {
     try {
@@ -108,6 +126,10 @@ export default function ActivitiesPage() {
       description: task.description,
       category: task.category,
       course: task.course,
+      taskLink: task.taskLink ?? "",
+      attachmentName: task.attachmentName ?? "",
+      attachmentMimeType: task.attachmentMimeType ?? "",
+      attachmentDataUrl: task.attachmentDataUrl ?? "",
       priority: task.priority,
       status: task.status,
       startTime: toDateTimeLocalValue(task.startTime),
@@ -127,6 +149,12 @@ export default function ActivitiesPage() {
       setError("End time must be after start time.");
       return;
     }
+
+    if (form.taskLink.trim() && !/^https?:\/\//i.test(form.taskLink.trim())) {
+      setError("Link must start with http:// or https://");
+      return;
+    }
+
     setSaving(true);
     setError("");
     try {
@@ -136,6 +164,10 @@ export default function ActivitiesPage() {
           description: form.description,
           category: form.category,
           course: form.course,
+          taskLink: form.taskLink.trim(),
+          attachmentName: form.attachmentName,
+          attachmentMimeType: form.attachmentMimeType,
+          attachmentDataUrl: form.attachmentDataUrl,
           priority: form.priority,
           status: form.status,
           startTime,
@@ -149,6 +181,10 @@ export default function ActivitiesPage() {
           description: form.description,
           category: form.category,
           course: form.course,
+          taskLink: form.taskLink.trim(),
+          attachmentName: form.attachmentName,
+          attachmentMimeType: form.attachmentMimeType,
+          attachmentDataUrl: form.attachmentDataUrl,
           priority: form.priority,
           status: form.status,
           startTime,
@@ -165,6 +201,53 @@ export default function ActivitiesPage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function clearAttachment() {
+    setForm((f) => ({
+      ...f,
+      attachmentName: "",
+      attachmentMimeType: "",
+      attachmentDataUrl: "",
+    }));
+  }
+
+  function handleAttachmentChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    if (file.size > MAX_ATTACHMENT_BYTES) {
+      setError("Attachment must be 10MB or less.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      if (!result) {
+        setError("Failed to read selected file.");
+        return;
+      }
+
+      setForm((f) => ({
+        ...f,
+        attachmentName: file.name,
+        attachmentMimeType: file.type || "application/octet-stream",
+        attachmentDataUrl: result,
+      }));
+      setError("");
+    };
+
+    reader.onerror = () => {
+      setError("Failed to read selected file.");
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  function openAttachmentPicker() {
+    fileInputRef.current?.click();
   }
 
   async function handleDelete(id: string) {
@@ -265,6 +348,10 @@ export default function ActivitiesPage() {
                   title={task.title}
                   category={[task.course, task.category].filter(Boolean).join(" • ") || "General"}
                   description={task.description}
+                  taskLink={task.taskLink ?? undefined}
+                  attachmentName={task.attachmentName ?? undefined}
+                  attachmentDataUrl={task.attachmentDataUrl ?? undefined}
+                  attachmentMimeType={task.attachmentMimeType ?? undefined}
                   startTime={task.startTime}
                   endTime={task.endTime}
                   status={API_TO_UI_STATUS[task.status]}
@@ -289,7 +376,7 @@ export default function ActivitiesPage() {
 
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-xl lg:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editingId ? "Edit Activity" : "New Activity"}</DialogTitle>
           </DialogHeader>
@@ -314,23 +401,63 @@ export default function ActivitiesPage() {
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               />
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="act-category">Category</Label>
-              <Input
-                id="act-category"
-                placeholder="e.g. Academic, Work, Project"
-                value={form.category}
-                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-              />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-1">
+                <Label htmlFor="act-category">Category</Label>
+                <Input
+                  id="act-category"
+                  placeholder="e.g. Academic, Work, Project"
+                  value={form.category}
+                  onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="act-course">Course</Label>
+                <Input
+                  id="act-course"
+                  placeholder="e.g. Math 202"
+                  value={form.course}
+                  onChange={(e) => setForm((f) => ({ ...f, course: e.target.value }))}
+                />
+              </div>
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="act-course">Course</Label>
-              <Input
-                id="act-course"
-                placeholder="e.g. Math 202"
-                value={form.course}
-                onChange={(e) => setForm((f) => ({ ...f, course: e.target.value }))}
-              />
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-1">
+                <Label htmlFor="act-link" className="flex items-center gap-2">
+                  <Link2 className="h-4 w-4" /> Optional Link
+                </Label>
+                <Input
+                  id="act-link"
+                  placeholder="https://example.com/resource"
+                  value={form.taskLink}
+                  onChange={(e) => setForm((f) => ({ ...f, taskLink: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Paperclip className="h-4 w-4" /> Optional File / Image (max 10MB)
+                </Label>
+                <input
+                  ref={fileInputRef}
+                  id="act-file"
+                  type="file"
+                  onChange={handleAttachmentChange}
+                  className="hidden"
+                />
+                <Button type="button" variant="outline" className="w-full justify-start" onClick={openAttachmentPicker}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  {form.attachmentName ? "Change attached file" : "Click to upload file/image"}
+                </Button>
+                {form.attachmentName && (
+                  <div className="rounded-md border px-3 py-2 text-sm flex items-center justify-between gap-3">
+                    <span className="truncate">Attached: {form.attachmentName}</span>
+                    <Button type="button" variant="ghost" size="sm" onClick={clearAttachment}>
+                      <X className="h-4 w-4 mr-1" /> Remove
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">

@@ -11,7 +11,7 @@ jest.mock('@/lib/firebase', () => ({
 }))
 
 jest.mock('firebase/auth', () => ({
-  onAuthStateChanged: jest.fn((auth, callback) => {
+  onAuthStateChanged: jest.fn(() => {
     // Return unsubscribe function
     return jest.fn()
   }),

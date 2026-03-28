@@ -8,13 +8,20 @@ datasource db {
 }
 
 model User {
-  id           String        @id
-  email        String?       @db.Text
+  id            String         @id @default(uuid())
+  email         String?        @db.Text
   displayName  String?       @db.Text
+  username      String?        @unique @db.Text
+  firstName     String?        @db.Text
+  lastName      String?        @db.Text
+  university    String?        @db.Text
+  major         String?        @db.Text
+  profilePhotoUrl String?      @db.Text
+  profileCompleted Boolean     @default(false)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
-  tasks        Task[]
+  tasks         Task[]
   focusSessions FocusSession[]
 }
 
@@ -27,15 +34,20 @@ model Task {
   priority    String      @db.Text @default("medium")
   category    String      @db.Text @default("")
   course      String      @db.Text @default("")
+  taskLink    String?     @db.Text
+  attachmentName String?  @db.Text
+  attachmentMimeType String? @db.Text
+  attachmentDataUrl String? @db.Text
   startTime   DateTime
   endTime     DateTime
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   focusSessions FocusSession[]
 
   @@index([userId])
+  @@index([userId, updatedAt])
 }
 
 model FocusSession {
@@ -48,10 +60,11 @@ model FocusSession {
   notes           String    @db.Text @default("")
   createdAt       DateTime  @default(now())
 
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  task            Task?     @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  task            Task?     @relation(fields: [taskId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@index([userId])
   @@index([taskId])
+  @@index([userId, completedAt])
 }
 

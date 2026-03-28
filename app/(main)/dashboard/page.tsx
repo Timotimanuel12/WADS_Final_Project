@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   RefreshCw, Play, Settings, CheckCircle, Clock, BrainCircuit, AlertCircle, Circle, Loader2
 } from "lucide-react";
-import { tasksApi, type Task } from "@/lib/api-client";
+import { profileApi, tasksApi, type Task } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -41,11 +41,22 @@ export default function DashboardPage() {
   React.useEffect(() => { loadTasks(); }, [loadTasks]);
 
   React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       const name = user?.displayName?.trim() || "there";
       setDisplayName(name.split(" ")[0] || "there");
-      setProfilePhotoUrl(user?.photoURL ?? null);
       setProfileInitials(getInitials(user?.displayName, user?.email));
+
+      if (!user) {
+        setProfilePhotoUrl(null);
+        return;
+      }
+
+      try {
+        const profile = await profileApi.get();
+        setProfilePhotoUrl(profile.profilePhotoUrl ?? user.photoURL ?? null);
+      } catch {
+        setProfilePhotoUrl(user.photoURL ?? null);
+      }
     });
     return unsubscribe;
   }, []);
@@ -105,7 +116,19 @@ export default function DashboardPage() {
               <Button variant="outline" size="icon" className="rounded-full" onClick={() => router.push('/settings')} title="Settings">
                 <Settings className="h-4 w-4" />
               </Button>
-              <Avatar className="cursor-pointer border ml-2">
+              <Avatar
+                className="cursor-pointer border ml-2"
+                role="button"
+                tabIndex={0}
+                onClick={() => router.push('/settings')}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    router.push('/settings');
+                  }
+                }}
+                aria-label="Open profile settings"
+              >
                 <AvatarImage src={profilePhotoUrl ?? undefined} alt={displayName} />
                 <AvatarFallback className="bg-primary/10 text-primary font-bold">{profileInitials}</AvatarFallback>
               </Avatar>
@@ -118,7 +141,11 @@ export default function DashboardPage() {
                 {urgentTasks.length > 0 ? `${urgentTasks.length} urgent task${urgentTasks.length > 1 ? "s require" : " requires"} attention.` : "You're all caught up!"}
               </p>
               <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Good {getGreeting()}, {displayName}.</h1>
-              <Button variant="secondary" className="bg-white text-blue-600 hover:bg-white/90 font-semibold border-0">
+              <Button
+                variant="secondary"
+                className="bg-white text-blue-600 hover:bg-white/90 font-semibold border-0"
+                onClick={() => router.push('/ai-plan')}
+              >
                 View Smart Schedule
               </Button>
             </div>

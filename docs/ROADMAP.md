@@ -41,11 +41,34 @@ Based on `README.md` requirements and declared stack:
 - [x] Add centralized error handler (`lib/api-response.ts`) + consistent API response format
 
 ## Phase 4 — Database Layer (PostgreSQL + Prisma)
-- [ ] Design Prisma schema (`User`, `Task`, `StudySession`, optional `Schedule`)
-- [ ] Create and run initial migrations
-- [ ] Implement repository/service layer for all data operations
-- [ ] Enforce per-user data ownership in all queries
-- [ ] Add seed data script for local development/demo
+- [x] Design Prisma schema (`User`, `Task`, `FocusSession`, optional `Schedule`)
+- [x] Create and run initial migrations
+- [x] Implement repository/service layer for all data operations
+- [x] Enforce per-user data ownership in all queries
+- [x] Add seed data script for local development/demo
+- [x] Add DB-level constraints (time ordering, non-negative durations, enum-like constraints)
+- [x] Add composite indexes for common query paths (`Task.userId + updatedAt`, `FocusSession.userId + completedAt`)
+- [x] Use transactions for multi-step write flows where partial failure is risky
+- [x] Add pagination/filtering for list endpoints to avoid unbounded scans
+- [x] Define migration governance (naming convention, rollback plan, pre-deploy checklist)
+- [x] Separate dev/staging/prod database strategy and seed policy per environment
+- [x] Document backup/restore runbook (pg_dump/restore) and verification cadence
+- [x] Add database observability baseline (slow-query logging + DB error monitoring)
+
+## Phase 4.5 — Settings Expansion (Post-MVP)
+- [ ] Add notification rules settings (deadline reminders, daily planning reminder, quiet hours)
+- [ ] Add calendar behavior settings (default view, week-start preference, show completed toggle)
+- [ ] Add focus timer defaults (focus/break duration presets, auto-start toggle)
+- [ ] Add account/privacy controls (data export, retention options, visibility summary)
+- [ ] Add appearance/accessibility settings (density, font size, reduced motion, contrast)
+
+## Phase 4.7 — Optional Dashboard Enhancements
+- [ ] Add Today Snapshot panel (due today count, urgent count, next planned item)
+- [ ] Add Quick Actions panel (add task, start focus, open AI plan, quick capture)
+- [ ] Add progress widgets (daily completion %, weekly streak, focus minutes today)
+- [ ] Add Smart Recommendation card (suggested next task from AI plan)
+- [ ] Add Overdue shortcut section for immediate triage
+- [ ] Add collapsible dashboard sections to keep layout clean at scale
 
 ## Phase 5 — Smart Scheduling + AI Integration
 - [ ] Define scheduling input/output contract (task list + constraints -> schedule)
@@ -53,6 +76,7 @@ Based on `README.md` requirements and declared stack:
 - [ ] Add AI prioritization endpoint (`/api/ai/prioritize`)
 - [ ] Add burnout detection rule set + recommendation output
 - [ ] Add fallback behavior when AI service is unavailable
+- [ ] Add AI planning preferences (preferred hours, max sessions/day, break cadence) (SETTINGS)
 
 ## Phase 6 — Focus Timer + Progress Dashboard
 - [ ] Implement timer start/pause/reset/complete flow
@@ -68,6 +92,15 @@ Based on `README.md` requirements and declared stack:
 - [ ] Add rate limiting and abuse protection on auth + critical endpoints
 - [ ] Secure cookie/token handling strategy (HTTP-only where applicable)
 - [ ] Add security test checklist (IDOR, injection, auth bypass, input fuzzing)
+
+## Phase 7.5 — UX/Auth/API Hardening (Post-MVP)
+- [ ] Run accessibility pass (keyboard navigation, focus order, ARIA labels)
+- [ ] Polish responsive UI consistency (spacing, typography, empty/error states)
+- [ ] Improve session-expiry/token-refresh UX handling across protected pages
+- [ ] Add login-throttling UX messaging for repeated auth failures
+- [ ] Add account-linking conflict handling notes (Google + email/password)
+- [ ] Standardize paginated API response metadata (`page`, `pageSize`, `total`)
+- [ ] Add consistent API error envelope + error-code mapping across all endpoints
 
 ## Phase 8 — Testing & Quality
 - [ ] Expand unit tests (components, utility functions)
@@ -92,9 +125,10 @@ Based on `README.md` requirements and declared stack:
 
 ---
 
-## Suggested Milestone Order (MVP-first)
+## Suggested Milestone Order (MVP + Hardening)
 1. Phases 0–2 (foundation + auth)
 2. Phases 3–4 (API + DB core)
 3. Phase 6 (timer + dashboard with real data)
 4. Phase 5 (smart scheduling + AI)
-5. Phases 7–10 (security hardening, tests, deployment, final docs)
+5. Phases 7 and 7.5 (security and UX/API hardening)
+6. Phases 8–10 (tests, deployment, final docs)

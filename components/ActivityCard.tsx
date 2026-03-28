@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, CheckCircle, Circle, Play, Trash2, Pencil } from "lucide-react";
+import { MoreHorizontal, CheckCircle, Circle, Play, Trash2, Pencil, Link2, Paperclip } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +19,10 @@ interface ActivityProps {
   title: string;
   category: string;
   description?: string;
+  taskLink?: string;
+  attachmentName?: string;
+  attachmentDataUrl?: string;
+  attachmentMimeType?: string;
   startTime?: string;
   endTime?: string;
   status: "Pending" | "In Progress" | "Completed";
@@ -29,7 +34,7 @@ interface ActivityProps {
 }
 
 export default function ActivityCard({
-  id, title, category, description, startTime, endTime, status, priority, type,
+  id, title, category, description, taskLink, attachmentName, attachmentDataUrl, attachmentMimeType, startTime, endTime, status, priority, type,
   onDelete, onStatusChange, onEdit,
 }: ActivityProps) {
   const [busy, setBusy] = useState(false);
@@ -96,6 +101,43 @@ export default function ActivityCard({
         <p className="text-sm text-muted-foreground mb-4">{category}</p>
         {description && (
           <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{description}</p>
+        )}
+
+        {(taskLink || attachmentDataUrl) && (
+          <div className="mb-4 space-y-2">
+            {taskLink && (
+              <a
+                href={taskLink}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700 hover:underline"
+              >
+                <Link2 className="h-4 w-4" />
+                Open link
+              </a>
+            )}
+            {attachmentDataUrl && (
+              <a
+                href={attachmentDataUrl}
+                target="_blank"
+                rel="noreferrer"
+                download={attachmentName || "attachment"}
+                className="flex items-center gap-2 text-sm text-foreground hover:underline"
+              >
+                <Paperclip className="h-4 w-4" />
+                {attachmentName || "Open attachment"}
+              </a>
+            )}
+            {attachmentDataUrl && attachmentMimeType?.startsWith("image/") && (
+              <Image
+                src={attachmentDataUrl}
+                alt={attachmentName || "Task attachment"}
+                width={480}
+                height={160}
+                className="mt-2 max-h-28 w-full rounded-md border object-cover"
+              />
+            )}
+          </div>
         )}
 
         <div className="flex items-center justify-between mt-auto pt-4 border-t border-border/50">

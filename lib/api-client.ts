@@ -61,6 +61,10 @@ export type CreateTaskInput = {
   priority?: TaskPriority;
   category?: string;
   course?: string;
+  taskLink?: string;
+  attachmentName?: string;
+  attachmentMimeType?: string;
+  attachmentDataUrl?: string;
   startTime: string;
   endTime: string;
 };
@@ -83,18 +87,50 @@ export type FocusSessionRecord = {
   notes: string;
 };
 
+export type UserProfile = {
+  userId: string;
+  email: string | null;
+  displayName: string | null;
+  username: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  university: string | null;
+  major: string | null;
+  profilePhotoUrl: string | null;
+  profileCompleted: boolean;
+};
+
+export type UpdateProfileInput = {
+  username: string;
+  firstName: string;
+  lastName: string;
+  university?: string;
+  major?: string;
+  profilePhotoUrl?: string | null;
+};
+
 export const sessionsApi = {
-  list: () => apiFetch<FocusSessionRecord[]>("/api/sessions"),
+  list: () => apiFetch<FocusSessionRecord[]>("/api/sessions?page=1&pageSize=200"),
   create: (input: CreateSessionInput) =>
     apiFetch<FocusSessionRecord>("/api/sessions", { method: "POST", body: JSON.stringify(input) }),
 };
 
 export const tasksApi = {
-  list: () => apiFetch<Task[]>("/api/tasks"),
+  list: () => apiFetch<Task[]>("/api/tasks?page=1&pageSize=200"),
   create: (input: CreateTaskInput) =>
     apiFetch<Task>("/api/tasks", { method: "POST", body: JSON.stringify(input) }),
   update: (id: string, input: Partial<CreateTaskInput>) =>
     apiFetch<Task>(`/api/tasks/${id}`, { method: "PUT", body: JSON.stringify(input) }),
   remove: (id: string) =>
     apiFetch<{ deleted: boolean }>(`/api/tasks/${id}`, { method: "DELETE" }),
+};
+
+export const profileApi = {
+  get: () => apiFetch<UserProfile>("/api/profile"),
+  update: (input: UpdateProfileInput) =>
+    apiFetch<UserProfile>("/api/profile", { method: "PUT", body: JSON.stringify(input) }),
+};
+
+export const accountApi = {
+  remove: () => apiFetch<{ deleted: boolean }>("/api/account", { method: "DELETE" }),
 };

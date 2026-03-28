@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -12,13 +12,20 @@ import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "next-themes"; 
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { getAiPlanEnabled, setAiPlanEnabled, subscribeAiPlanEnabled } from "@/lib/ai-plan-toggle";
 
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [aiPlanEnabled, setAiPlanEnabledState] = useState<boolean>(() => getAiPlanEnabled());
   // 2. Initialize the hook
   const { theme, setTheme } = useTheme(); 
+
+  useEffect(() => {
+    const unsubscribe = subscribeAiPlanEnabled(setAiPlanEnabledState);
+    return unsubscribe;
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -40,24 +47,32 @@ export default function Sidebar() {
 
       <ScrollArea className="flex-1 px-4">
         <div className="space-y-1 mb-6">
-          <Button 
-            variant={pathname === '/dashboard' ? 'secondary' : 'ghost'} 
+          <Button
+            variant={pathname === '/dashboard' ? 'secondary' : 'ghost'}
             className="w-full justify-start font-semibold"
             onClick={() => router.push('/dashboard')}
           >
             <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
           </Button>
-          
-          <Button 
-            variant={pathname === '/calendar' ? 'secondary' : 'ghost'} 
+
+          <Button
+            variant={pathname === '/calendar' ? 'secondary' : 'ghost'}
             className="w-full justify-start font-semibold"
             onClick={() => router.push('/calendar')}
           >
             <CalendarIcon className="mr-2 h-4 w-4" /> Calendar
           </Button>
-          
-          <Button 
-            variant={pathname === '/activities' ? 'secondary' : 'ghost'} 
+
+          <Button
+            variant={pathname === '/ai-plan' ? 'secondary' : 'ghost'}
+            className="w-full justify-start font-semibold"
+            onClick={() => router.push('/ai-plan')}
+          >
+            <BrainCircuit className="mr-2 h-4 w-4" /> AI Plan
+          </Button>
+
+          <Button
+            variant={pathname === '/activities' ? 'secondary' : 'ghost'}
             className="w-full justify-start font-semibold"
             onClick={() => router.push('/activities')}
           >
@@ -83,8 +98,13 @@ export default function Sidebar() {
           >
             <Plus className="mr-2 h-4 w-4" /> Add New Task
           </Button>
-          <Button className="w-full justify-start bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 shadow-none">
-            <BrainCircuit className="mr-2 h-4 w-4" /> Enable AI Auto-Plan
+
+          <Button
+            className="w-full justify-start shadow-none"
+            variant={aiPlanEnabled ? "default" : "secondary"}
+            onClick={() => setAiPlanEnabled(!aiPlanEnabled)}
+          >
+            <BrainCircuit className="mr-2 h-4 w-4" /> {aiPlanEnabled ? "Disable AI Auto-Plan" : "Enable AI Auto-Plan"}
           </Button>
         </div>
       </ScrollArea>

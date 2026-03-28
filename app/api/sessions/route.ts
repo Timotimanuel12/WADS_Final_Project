@@ -1,40 +1,32 @@
 import { type NextRequest } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth-middleware";
 import { ok, created, err } from "@/lib/api-response";
-import { prisma } from "@/lib/prisma";
+import {
+  buildSessionFilterQuery,
+  createSessionForUser,
+  listSessionsForUser,
+  serializeSession,
+  validateOwnedTaskReference,
+} from "@/lib/services/session-service";
 
 // GET /api/sessions — list all focus sessions for the authenticated user
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
   if (isAuthError(auth)) return auth;
 
-  const userSessions = await prisma.focusSession.findMany({
-    where: { userId: auth.userId },
-    orderBy: { completedAt: "desc" },
-  });
-
-  return ok(
-    userSessions.map((s) => ({
-      ...s,
-      startedAt: s.startedAt.toISOString(),
-      completedAt: s.completedAt.toISOString(),
-      createdAt: s.createdAt.toISOString(),
-    }))
-  );
+  try {
+    const filters = buildSessionFilterQuery(request.nextUrl.searchParams);
+    const userSessions = await listSessionsForUser(auth.userId, filters);
+    return ok(userSessions.map((s) => serializeSession(s)));
+  } catch {
+    return err("Failed to fetch focus sessions", 500);
+  }
 }
 
 // POST /api/sessions — log a completed focus session
 export async function POST(request: NextRequest) {
   const auth = await requireAuth(request);
   if (isAuthError(auth)) return auth;
-
-  // Ensure the authenticated user exists in Postgres so the FK on FocusSession.userId
-  // is always satisfied, even if /api/auth/session was never called explicitly.
-  await prisma.user.upsert({
-    where: { id: auth.userId },
-    create: { id: auth.userId, email: auth.email ?? null },
-    update: { email: auth.email ?? null },
-  });
 
   let body: unknown;
   try {
@@ -56,21 +48,24 @@ export async function POST(request: NextRequest) {
   if (Number.isNaN(Date.parse(completedAt))) return err("completedAt must be a valid date");
   if (new Date(startedAt) > new Date(completedAt)) return err("completedAt must be after startedAt");
 
-  const session = await prisma.focusSession.create({
-    data: {
+  try {
+    const normalizedTaskId = typeof taskId === "string" && taskId.trim() ? taskId : null;
+    const isOwnedTaskRef = await validateOwnedTaskReference(auth.userId, normalizedTaskId);
+    if (!isOwnedTaskRef) {
+      return err("taskId must reference one of your tasks", 400);
+    }
+
+    const session = await createSessionForUser(auth, {
       userId: auth.userId,
-      taskId: typeof taskId === "string" ? taskId : null,
+      taskId: normalizedTaskId,
       durationMinutes,
       startedAt: new Date(startedAt),
       completedAt: new Date(completedAt),
       notes: typeof notes === "string" ? notes : "",
-    },
-  });
+    });
 
-  return created({
-    ...session,
-    startedAt: session.startedAt.toISOString(),
-    completedAt: session.completedAt.toISOString(),
-    createdAt: session.createdAt.toISOString(),
-  });
+    return created(serializeSession(session));
+  } catch {
+    return err("Failed to create focus session", 500);
+  }
 }

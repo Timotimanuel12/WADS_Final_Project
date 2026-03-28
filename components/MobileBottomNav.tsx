@@ -1,12 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Calendar, LayoutDashboard, ListTodo, Settings } from "lucide-react";
+import { BrainCircuit, Calendar, LayoutDashboard, ListTodo, Settings } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 
 const items = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Calendar", href: "/calendar", icon: Calendar },
+  { label: "AI Plan", href: "/ai-plan", icon: BrainCircuit },
   { label: "Activities", href: "/activities", icon: ListTodo },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
@@ -17,7 +18,7 @@ export default function MobileBottomNav() {
 
   return (
     <nav className="md:hidden fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90">
-      <div className="grid grid-cols-4 gap-1 p-2">
+      <div className="grid grid-cols-5 gap-1 p-2">
         {items.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href;

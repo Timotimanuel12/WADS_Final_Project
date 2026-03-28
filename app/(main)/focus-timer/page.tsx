@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Play, Pause, RotateCcw, CheckCircle, Timer, Settings, History, Coffee, Brain, Loader2 } from "lucide-react";
-import { tasksApi, sessionsApi, type Task, type FocusSessionRecord } from "@/lib/api-client";
+import { profileApi, tasksApi, sessionsApi, type Task, type FocusSessionRecord } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -61,11 +61,22 @@ export default function FocusTimerPage() {
 
   // ── Load auth ──
   React.useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
       const n = user?.displayName?.trim() || "there";
       setDisplayName(n.split(" ")[0] || "there");
-      setProfilePhotoUrl(user?.photoURL ?? null);
       setProfileInitials(getInitials(user?.displayName, user?.email));
+
+      if (!user) {
+        setProfilePhotoUrl(null);
+        return;
+      }
+
+      try {
+        const profile = await profileApi.get();
+        setProfilePhotoUrl(profile.profilePhotoUrl ?? user.photoURL ?? null);
+      } catch {
+        setProfilePhotoUrl(user.photoURL ?? null);
+      }
     });
     return unsub;
   }, []);
@@ -185,7 +196,19 @@ export default function FocusTimerPage() {
           <Button variant="outline" size="icon" className="rounded-full" onClick={() => router.push("/settings")} title="Settings">
             <Settings className="h-4 w-4" />
           </Button>
-          <Avatar className="cursor-pointer border ml-1">
+          <Avatar
+            className="cursor-pointer border ml-1"
+            role="button"
+            tabIndex={0}
+            onClick={() => router.push('/settings')}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                router.push('/settings');
+              }
+            }}
+            aria-label="Open profile settings"
+          >
             <AvatarImage src={profilePhotoUrl ?? undefined} alt={displayName} />
             <AvatarFallback className="bg-primary/10 text-primary font-bold">{profileInitials}</AvatarFallback>
           </Avatar>
