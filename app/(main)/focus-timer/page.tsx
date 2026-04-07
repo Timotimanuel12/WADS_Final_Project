@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Play, Pause, RotateCcw, CheckCircle, Timer, Settings,
@@ -13,6 +13,7 @@ import { profileApi, tasksApi, sessionsApi, type Task, type FocusSessionRecord }
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { useAudio } from "@/components/AudioProvider";
 
 // ─── Mode config ──────────────────────────────────────────────────────────────
 type Mode = "focus" | "short" | "long";
@@ -27,8 +28,6 @@ const MODE_CONFIG: Record<Mode, { label: string; minutes: number; color: string 
 const MUSIC_TRACKS = [
   { id: "jfKfPfyJRdk", label: "Lofi Hip Hop Radio (Lofi Girl)" },
   { id: "qYnA9wWFHLI", label: "Deep Focus — Ambient Study Music" },
-  { id: "4oStw0r33so", label: "Classical Piano for Studying" },
-  { id: "h2zkV-l_more", label: "Jazz Coffee Shop Ambience" },
   { id: "WPni755-Krg", label: "Binaural Beats — Focus 40Hz" },
 ] as const;
 
@@ -46,77 +45,165 @@ function getInitials(name?: string | null, email?: string | null) {
   return email?.trim()[0]?.toUpperCase() ?? "U";
 }
 
-// ─── Web Audio noise generator hook ──────────────────────────────────────────
-type NoiseType = "white" | "brown";
+type AmbientSoundId = "white" | "brown" | "pink" | "rain" | "stream" | "cafe" | "library" | "office" | "forest" | "wind" | "ocean" | "waves" | "train" | "fan" | "campfire" | "thunder" | "traffic";
 
-function useNoise() {
-  const ctxRef = React.useRef<AudioContext | null>(null);
-  const sourceRef = React.useRef<ScriptProcessorNode | null>(null);
-  const gainRef = React.useRef<GainNode | null>(null);
-  const [active, setActive] = React.useState<NoiseType | null>(null);
+const AMBIENT_SOUNDS: Array<{
+  id: AmbientSoundId;
+  label: string;
+  description: string;
+  color: string;
+  activeColor: string;
+}> = [
+  {
+    id: "white",
+    label: "White noise",
+    description: "Balanced, clean static",
+    color: "text-blue-500",
+    activeColor: "border-blue-400 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-medium",
+  },
+  {
+    id: "brown",
+    label: "Brown noise",
+    description: "Deep, muted rumble",
+    color: "text-indigo-500",
+    activeColor: "border-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 font-medium",
+  },
+  {
+    id: "pink",
+    label: "Pink noise",
+    description: "Mid-range tone, soothing",
+    color: "text-rose-500",
+    activeColor: "border-rose-400 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 font-medium",
+  },
+  {
+    id: "rain",
+    label: "Rain",
+    description: "Sparse drops with hum",
+    color: "text-cyan-500",
+    activeColor: "border-cyan-400 bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 font-medium",
+  },
+  {
+    id: "stream",
+    label: "Stream",
+    description: "Flowing water, gentle",
+    color: "text-teal-500",
+    activeColor: "border-teal-400 bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 font-medium",
+  },
+  {
+    id: "cafe",
+    label: "Cafe",
+    description: "Chatter and ambient hum",
+    color: "text-amber-500",
+    activeColor: "border-amber-400 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-medium",
+  },
+  {
+    id: "library",
+    label: "Library",
+    description: "Quiet room with page turns",
+    color: "text-stone-500",
+    activeColor: "border-stone-400 bg-stone-50 dark:bg-stone-950/40 text-stone-700 dark:text-stone-300 font-medium",
+  },
+  {
+    id: "office",
+    label: "Office",
+    description: "Keyboard and desk ambience",
+    color: "text-neutral-500",
+    activeColor: "border-neutral-400 bg-neutral-50 dark:bg-neutral-950/40 text-neutral-700 dark:text-neutral-300 font-medium",
+  },
+  {
+    id: "forest",
+    label: "Forest",
+    description: "Birds and rustling leaves",
+    color: "text-green-500",
+    activeColor: "border-green-400 bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 font-medium",
+  },
+  {
+    id: "wind",
+    label: "Wind",
+    description: "Rustling, gentle",
+    color: "text-emerald-500",
+    activeColor: "border-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-medium",
+  },
+  {
+    id: "ocean",
+    label: "Ocean",
+    description: "Rhythmic tide motion",
+    color: "text-blue-600",
+    activeColor: "border-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-medium",
+  },
+  {
+    id: "waves",
+    label: "Waves",
+    description: "Ocean rhythm, soothing",
+    color: "text-sky-500",
+    activeColor: "border-sky-400 bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 font-medium",
+  },
+  {
+    id: "train",
+    label: "Train",
+    description: "Rhythmic cabin rumble",
+    color: "text-violet-500",
+    activeColor: "border-violet-400 bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 font-medium",
+  },
+  {
+    id: "fan",
+    label: "Fan hum",
+    description: "Steady mechanical drone",
+    color: "text-slate-500",
+    activeColor: "border-slate-400 bg-slate-50 dark:bg-slate-950/40 text-slate-700 dark:text-slate-300 font-medium",
+  },
+  {
+    id: "campfire",
+    label: "Campfire",
+    description: "Crackling with warmth",
+    color: "text-orange-500",
+    activeColor: "border-orange-400 bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 font-medium",
+  },
+  {
+    id: "thunder",
+    label: "Thunder",
+    description: "Deep rumbling storms",
+    color: "text-purple-500",
+    activeColor: "border-purple-400 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-medium",
+  },
+  {
+    id: "traffic",
+    label: "Traffic",
+    description: "Distant vehicular rumble",
+    color: "text-zinc-500",
+    activeColor: "border-zinc-400 bg-zinc-50 dark:bg-zinc-950/40 text-zinc-700 dark:text-zinc-300 font-medium",
+  },
+];
 
-  const stop = React.useCallback(() => {
-    sourceRef.current?.disconnect();
-    gainRef.current?.disconnect();
-    sourceRef.current = null;
-    gainRef.current = null;
-    setActive(null);
-  }, []);
+const SOUND_GROUPS = [
+  { title: "Noise", ids: ["white", "brown", "pink"] as AmbientSoundId[] },
+  { title: "Nature", ids: ["rain", "stream", "forest", "wind", "ocean", "waves", "campfire", "thunder"] as AmbientSoundId[] },
+  { title: "Ambient", ids: ["cafe", "library", "office", "train", "fan", "traffic"] as AmbientSoundId[] },
+];
 
-  const toggle = React.useCallback((type: NoiseType) => {
-    if (active === type) { stop(); return; }
-    stop();
-
-    const ctx = ctxRef.current ?? new AudioContext();
-    ctxRef.current = ctx;
-    if (ctx.state === "suspended") ctx.resume();
-
-    const bufferSize = 4096;
-    const processor = ctx.createScriptProcessor(bufferSize, 1, 1);
-    const gain = ctx.createGain();
-
-    if (type === "white") {
-      gain.gain.value = 0.04;
-      processor.onaudioprocess = (e) => {
-        const out = e.outputBuffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) out[i] = Math.random() * 2 - 1;
-      };
-    } else {
-      // Brown noise: integrate white noise
-      gain.gain.value = 0.25;
-      let last = 0;
-      processor.onaudioprocess = (e) => {
-        const out = e.outputBuffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          const white = Math.random() * 2 - 1;
-          last = (last + 0.02 * white) / 1.02;
-          out[i] = last * 3.5;
-        }
-      };
-    }
-
-    processor.connect(gain);
-    gain.connect(ctx.destination);
-    sourceRef.current = processor;
-    gainRef.current = gain;
-    setActive(type);
-  }, [active, stop]);
-
-  // Cleanup on unmount
-  React.useEffect(() => () => { stop(); ctxRef.current?.close(); }, [stop]);
-
-  return { active, toggle, stop };
-}
+const SOUND_BADGE_COLOR: Record<AmbientSoundId, string> = {
+  white: "bg-blue-500",
+  brown: "bg-indigo-500",
+  pink: "bg-rose-500",
+  rain: "bg-cyan-500",
+  stream: "bg-teal-500",
+  cafe: "bg-amber-500",
+  library: "bg-stone-500",
+  office: "bg-neutral-500",
+  forest: "bg-green-500",
+  wind: "bg-emerald-500",
+  ocean: "bg-blue-600",
+  waves: "bg-sky-500",
+  train: "bg-violet-500",
+  fan: "bg-slate-500",
+  campfire: "bg-orange-500",
+  thunder: "bg-purple-500",
+  traffic: "bg-zinc-500",
+};
 
 // ─── Sounds panel ─────────────────────────────────────────────────────────────
 function SoundsPanel() {
-  const noise = useNoise();
-  const [musicTrackId, setMusicTrackId] = React.useState(MUSIC_TRACKS[0].id);
-  const [musicPlaying, setMusicPlaying] = React.useState(false);
-
-  function toggleMusic() {
-    setMusicPlaying((p) => !p);
-  }
+  const audio = useAudio();
 
   return (
     <div className="space-y-3">
@@ -124,45 +211,69 @@ function SoundsPanel() {
         <Music className="h-3.5 w-3.5" /> Sounds
       </p>
 
-      {/* White noise */}
-      <button
-        onClick={() => noise.toggle("white")}
-        className={`w-full text-left px-3 py-2.5 rounded-lg border text-sm transition-colors flex items-center gap-2
-          ${noise.active === "white"
-            ? "border-blue-400 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-medium"
-            : "border-transparent hover:border-border hover:bg-muted/50 text-muted-foreground"}`}
-      >
-        {noise.active === "white"
-          ? <Volume2 className="h-4 w-4 shrink-0 text-blue-500" />
-          : <VolumeX className="h-4 w-4 shrink-0" />}
-        <span>Activate white noise</span>
-        {noise.active === "white" && (
-          <Badge className="ml-auto text-[10px] px-1.5 py-0 bg-blue-500">ON</Badge>
-        )}
-      </button>
+      <div className="space-y-3">
+        {SOUND_GROUPS.map((group) => (
+          <div key={group.title} className="space-y-2">
+            <p className="px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{group.title}</p>
+            <div className="grid grid-cols-1 gap-2">
+              {group.ids.map((id) => {
+                const sound = AMBIENT_SOUNDS.find((item) => item.id === id)!;
+                const isActive = audio.activeAmbientSounds.includes(sound.id);
+                return (
+                  <button
+                    key={sound.id}
+                    onClick={() => audio.toggleAmbientSound(sound.id)}
+                    className={`w-full text-left px-2.5 py-2 rounded-lg border text-sm transition-colors flex items-start gap-2
+                      ${isActive
+                        ? sound.activeColor
+                        : "border-transparent hover:border-border hover:bg-muted/50 text-muted-foreground"}`}
+                  >
+                    {isActive
+                      ? <Volume2 className={`h-4 w-4 shrink-0 mt-0.5 ${sound.color}`} />
+                      : <VolumeX className="h-4 w-4 shrink-0 mt-0.5" />}
+                    <div className="min-w-0 flex-1 flex flex-col gap-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate">{sound.label}</span>
+                        {isActive && <Badge className={`text-[10px] px-1.5 py-0 ${SOUND_BADGE_COLOR[sound.id]}`}>ON</Badge>}
+                      </div>
+                      <span className="text-xs text-muted-foreground/80">{sound.description}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
 
-      {/* Brown noise (Headphones Recommended) */}
-      <button
-        onClick={() => noise.toggle("brown")}
-        className={`w-full text-left px-3 py-2.5 rounded-lg border text-sm transition-colors flex items-center gap-2
-          ${noise.active === "brown"
-            ? "border-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 font-medium"
-            : "border-transparent hover:border-border hover:bg-muted/50 text-muted-foreground"}`}
-      >
-        <Headphones className="h-4 w-4 shrink-0" />
-        <span>Headphones Recommended</span>
-        {noise.active === "brown" && (
-          <Badge className="ml-auto text-[10px] px-1.5 py-0 bg-indigo-500">ON</Badge>
-        )}
-      </button>
+      <p className="px-1 text-xs text-muted-foreground flex items-center gap-1.5 leading-snug">
+        <Headphones className="h-3.5 w-3.5 shrink-0" />
+        Headphones recommended for the best experience.
+      </p>
+
+      <div className="space-y-1 px-1 pt-1">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>Volume</span>
+          <span>{Math.round(audio.ambientVolume * 100)}%</span>
+        </div>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value={audio.ambientVolume}
+          onChange={(e) => audio.setAmbientVolume(Number(e.target.value))}
+          className="w-full accent-primary"
+        />
+      </div>
 
       {/* Music */}
       <div className="space-y-2 pt-1">
         <select
-          value={musicTrackId}
+          value={audio.musicTrackId}
           onChange={(e) => {
-            setMusicTrackId(e.target.value);
-            setMusicPlaying(false); // reset on track change
+            audio.setMusicTrackId(e.target.value);
+            audio.setMusicPlaying(false);
           }}
           className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
         >
@@ -172,32 +283,29 @@ function SoundsPanel() {
         </select>
 
         <button
-          onClick={toggleMusic}
+          onClick={() => audio.setMusicPlaying(!audio.musicPlaying)}
           className={`w-full px-3 py-2.5 rounded-lg border text-sm transition-colors flex items-center gap-2
-            ${musicPlaying
+            ${audio.musicPlaying
               ? "border-green-400 bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 font-medium"
               : "border-transparent hover:border-border hover:bg-muted/50 text-muted-foreground"}`}
         >
-          {musicPlaying
+          {audio.musicPlaying
             ? <Pause className="h-4 w-4 shrink-0 fill-current" />
             : <Play className="h-4 w-4 shrink-0 fill-current" />}
-          <span>{musicPlaying ? "Stop music" : "Play study music"}</span>
-          {musicPlaying && (
+          <span>{audio.musicPlaying ? "Stop music" : "Play study music"}</span>
+          {audio.musicPlaying && (
             <Badge className="ml-auto text-[10px] px-1.5 py-0 bg-green-500">LIVE</Badge>
           )}
         </button>
-
-        {/* music iframe*/}
-        {musicPlaying && (
-          <iframe
-            key={musicTrackId}
-            src={`https://www.youtube.com/embed/${musicTrackId}?autoplay=1&controls=0`}
-            allow="autoplay"
-            className="hidden"
-            title="Study music player"
-          />
-        )}
       </div>
+
+      <button
+        onClick={audio.stopAllSounds}
+        className="w-full text-left px-3 py-2.5 rounded-lg border text-sm transition-colors flex items-center gap-2 border-transparent hover:border-border hover:bg-muted/50 text-muted-foreground"
+      >
+        <RotateCcw className="h-4 w-4 shrink-0" />
+        <span>Stop all sounds</span>
+      </button>
     </div>
   );
 }
@@ -408,7 +516,24 @@ export default function FocusTimerPage() {
                 <Play className="fill-current h-6 w-6 ml-1" />
               </Button>
             )}
-            <div className="w-11 h-11" />
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="icon" className="rounded-full w-11 h-11" title="Sounds and music">
+                  <Music className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-xl p-0 h-[85vh] max-h-[85vh] flex flex-col overflow-hidden">
+                <DialogHeader className="px-5 pt-5 pb-0 shrink-0">
+                  <DialogTitle className="flex items-center gap-2">
+                    <Music className="h-4 w-4" />
+                    Sounds and Music
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="px-5 pb-5 pt-3 flex-1 min-h-0 overflow-y-auto">
+                  <SoundsPanel />
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
           <p className="text-sm text-muted-foreground">
@@ -419,8 +544,8 @@ export default function FocusTimerPage() {
         </div>
 
         {/* RIGHT — sidebar */}
-        <div className="w-80 border-l bg-background flex flex-col min-h-0">
-          <ScrollArea className="flex-1 p-4">
+        <div className="w-80 border-l bg-background flex flex-col min-h-0 overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-4">
             <div className="space-y-4">
 
               {/* Task selector */}
@@ -467,13 +592,8 @@ export default function FocusTimerPage() {
                 </div>
               )}
 
-              {/* ── Sounds ── */}
-              <div className="border-t pt-4">
-                <SoundsPanel />
-              </div>
-
               {/* Session History */}
-              <div className="border-t pt-4">
+              <div className={`${mode === "focus" ? "border-t pt-4" : ""}`}>
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 px-1 flex items-center gap-1.5">
                   <History className="h-3.5 w-3.5" /> Session History
                 </p>
@@ -509,7 +629,7 @@ export default function FocusTimerPage() {
               </div>
 
             </div>
-          </ScrollArea>
+          </div>
         </div>
       </div>
 

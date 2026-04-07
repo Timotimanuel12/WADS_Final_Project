@@ -1,4 +1,4 @@
-# MVP Scope
+﻿# MVP Scope
 
 This document finalizes the MVP scope for HelpImTooLazy.
 

@@ -1,4 +1,4 @@
-# Database Operations Guide
+﻿# Database Operations Guide
 
 This document defines the database governance baseline for local/dev/staging/prod environments.
 

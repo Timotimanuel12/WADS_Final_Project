@@ -1,4 +1,4 @@
-# HelpImTooLazy Roadmap To-Do List
+﻿# HelpImTooLazy Roadmap To-Do List
 
 Based on `README.md` requirements and declared stack:
 - Frontend: Next.js (App Router)
@@ -126,6 +126,20 @@ Based on `README.md` requirements and declared stack:
 - [ ] Add Overdue shortcut section for immediate triage
 - [ ] Add collapsible dashboard sections to keep layout clean at scale
 
+### Phase 14 — Security Recommendations Backlog
+- [ ] Integrate security checks into existing endpoints (registration rate limiting + task validation utilities)
+- [ ] Add CI/CD security test gates (fail build on security test regressions)
+- [ ] Implement distributed rate limiting (Redis-based)
+- [ ] Add API key management + rotation strategy
+- [ ] Add 2FA/MFA support for accounts
+- [ ] Add comprehensive security audit logging
+- [ ] Tune security headers per endpoint profile
+- [ ] Add OWASP dependency scanning in CI
+- [ ] Define and test security incident response procedure
+- [ ] Run scheduled penetration testing and remediation loop
+- [ ] Define long-term compliance/security program (e.g., SOC 2 readiness)
+- [ ] Plan recurring security audits cadence
+
 ---
 
 ## Suggested Milestone Order (MVP + Hardening)
@@ -134,4 +148,4 @@ Based on `README.md` requirements and declared stack:
 3. Phases 5–6 (MVP completion: scheduling, timer, dashboard)
 4. Phases 7–8 (security and UX/API hardening)
 5. Phases 9–11 (tests, deployment, final docs)
-6. Post-delivery backlog (Phases 12–13)
+6. Post-delivery backlog (Phases 12–14)

@@ -1,4 +1,4 @@
-# Definition of Done (Per Feature)
+﻿# Definition of Done (Per Feature)
 
 A feature is considered done only when all categories below are satisfied.
 

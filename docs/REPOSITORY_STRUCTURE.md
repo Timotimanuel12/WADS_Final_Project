@@ -1,4 +1,4 @@
-# Repository Structure
+﻿# Repository Structure
 
 This project currently uses a single Next.js app at repository root.
 
