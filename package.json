@@ -9,7 +9,7 @@
     "lint": "eslint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "prisma:generate": "prisma generate",
+    "prisma:generate": "prisma generate --no-engine",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:new": "node scripts/create-migration.mjs",
     "prisma:studio": "prisma studio",
