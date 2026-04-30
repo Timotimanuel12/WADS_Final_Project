@@ -30,11 +30,13 @@ import {
   Clock,
   Loader2,
 } from "lucide-react";
-import { profileApi, tasksApi, type Task } from "@/lib/api-client";
+import { aiApi, profileApi, tasksApi, type AIPrioritizeItem, type Task } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { getAiPlanEnabled, setAiPlanEnabled, subscribeAiPlanEnabled } from "@/lib/ai-plan-toggle";
+import { getCachedAiPlan, getCachedAiPlanView, subscribeCachedAiPlan, type CachedAiPlanViewItem } from "@/lib/ai-plan-cache";
+import { loadAISettings, type AISettings } from "@/lib/ai-preferences";
 
 type CalendarView = "week" | "month";
 
@@ -45,6 +47,9 @@ export default function CalendarPage() {
   const [tasks, setTasks] = React.useState<Task[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [aiOptimizedEnabled, setAiOptimizedEnabled] = React.useState<boolean>(() => getAiPlanEnabled());
+  const [aiSettings, setAiSettings] = React.useState<AISettings>(() => loadAISettings());
+  const [aiPlanRecommendations, setAiPlanRecommendations] = React.useState<AiRecommendation[]>([]);
+  const [aiPlanLoading, setAiPlanLoading] = React.useState(false);
   const [profilePhotoUrl, setProfilePhotoUrl] = React.useState<string | null>(null);
   const [profileInitials, setProfileInitials] = React.useState("AL");
 
@@ -88,21 +93,125 @@ export default function CalendarPage() {
     return unsubscribe;
   }, []);
 
+  React.useEffect(() => {
+    const syncSettings = () => setAiSettings(loadAISettings());
+    window.addEventListener("ai-settings-updated", syncSettings as EventListener);
+    window.addEventListener("storage", syncSettings);
+
+    return () => {
+      window.removeEventListener("ai-settings-updated", syncSettings as EventListener);
+      window.removeEventListener("storage", syncSettings);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    const unsubscribe = subscribeCachedAiPlan(() => {
+      if (!aiOptimizedEnabled) return;
+
+      const cachedView = getCachedAiPlanView();
+      if (cachedView.length > 0) {
+        const mappedView = mapCachedPlanViewToRecommendations(cachedView, tasks);
+        if (mappedView.length > 0) {
+          setAiPlanRecommendations(mappedView);
+          return;
+        }
+      }
+
+      const cached = getCachedAiPlan();
+      if (cached.length === 0) return;
+
+      const mapped = mapPrioritizedTasksToRecommendations(cached, tasks, currentDate);
+      if (mapped.length > 0) {
+        setAiPlanRecommendations(mapped);
+      }
+    });
+
+    return unsubscribe;
+  }, [aiOptimizedEnabled, tasks, currentDate]);
+
+  const fallbackPlanningPreferences = React.useMemo(
+    () => ({
+      startHour: aiSettings.workStartHour,
+      endHour: aiSettings.workEndHour,
+      allowWeekends: aiSettings.allowWeekendScheduling,
+    }),
+    [aiSettings]
+  );
+
   const sortedTasks = React.useMemo(
     () => [...tasks].sort((left, right) => new Date(left.startTime).getTime() - new Date(right.startTime).getTime()),
     [tasks]
   );
 
-  const aiRecommendations = React.useMemo(() => buildAiRecommendations(sortedTasks, currentDate), [sortedTasks, currentDate]);
+  React.useEffect(() => {
+    let cancelled = false;
+
+    async function loadAiPlan() {
+      if (!aiOptimizedEnabled || tasks.length === 0) {
+        setAiPlanRecommendations([]);
+        return;
+      }
+
+      const cachedView = getCachedAiPlanView();
+      if (cachedView.length > 0) {
+        const mappedView = mapCachedPlanViewToRecommendations(cachedView, tasks);
+        if (mappedView.length > 0) {
+          setAiPlanRecommendations(mappedView);
+          return;
+        }
+      }
+
+      const cached = getCachedAiPlan();
+      if (cached.length > 0) {
+        const cachedMapped = mapPrioritizedTasksToRecommendations(cached, tasks, currentDate);
+        if (cachedMapped.length > 0) {
+          setAiPlanRecommendations(cachedMapped);
+          return;
+        }
+      }
+
+      setAiPlanLoading(true);
+      try {
+        const data = await aiApi.prioritize({
+          preferredHours: { start: aiSettings.workStartHour, end: aiSettings.workEndHour },
+          allowWeekends: aiSettings.allowWeekendScheduling,
+        });
+        if (cancelled) return;
+
+        const mapped = mapPrioritizedTasksToRecommendations(data.recommendations, tasks, currentDate);
+        setAiPlanRecommendations(
+          mapped.length > 0 ? mapped : buildAiRecommendations(sortedTasks, currentDate, fallbackPlanningPreferences)
+        );
+      } catch {
+        if (!cancelled) {
+          setAiPlanRecommendations(buildAiRecommendations(sortedTasks, currentDate, fallbackPlanningPreferences));
+        }
+      } finally {
+        if (!cancelled) {
+          setAiPlanLoading(false);
+        }
+      }
+    }
+
+    void loadAiPlan();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [aiOptimizedEnabled, tasks, currentDate, sortedTasks, aiSettings, fallbackPlanningPreferences]);
+
   const aiCalendarTasks = React.useMemo(
     () =>
-      aiRecommendations.map((item, index) => ({
+      aiPlanRecommendations.map((item, index) => ({
         ...item.task,
         id: `${item.task.id}__ai__${index}`,
-        startTime: item.suggestedStart.toISOString(),
-        endTime: item.suggestedEnd.toISOString(),
+        startTime: (item.suggestedDate ? new Date(item.suggestedDate) : item.suggestedStart).toISOString(),
+        endTime: (item.suggestedDate
+          ? addMinutes(new Date(item.suggestedDate), Math.max(30, item.suggestedEnd ? Math.round((item.suggestedEnd.getTime() - item.suggestedStart.getTime()) / 60000) : 30))
+          : item.suggestedEnd
+        ).toISOString(),
       })),
-    [aiRecommendations]
+    [aiPlanRecommendations]
   );
 
   const visibleTasks = aiOptimizedEnabled ? aiCalendarTasks : sortedTasks;
@@ -290,6 +399,12 @@ export default function CalendarPage() {
             </div>
           </div>
 
+          {aiOptimizedEnabled && aiPlanLoading && (
+            <div className="mb-4 rounded-lg border bg-background px-4 py-3 text-sm text-muted-foreground flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading Groq schedule...
+            </div>
+          )}
+
           <Card className="flex-1 overflow-hidden flex flex-col bg-background shadow-sm border min-h-0">
             <TabsContent value="month" className="m-0 flex-1 flex flex-col min-h-0">
               <div className="flex-1 overflow-y-auto p-3 space-y-6 min-h-0">
@@ -333,7 +448,7 @@ export default function CalendarPage() {
                               {format(day, "d")}
                             </span>
                             <div className="mt-2 space-y-1">
-                              {tasksForDay.slice(0, 3).map((task) => (
+                              {tasksForDay.slice(0, 5).map((task) => (
                                 <div
                                   key={task.id}
                                   className={`text-[10px] font-bold p-1 rounded truncate ${getEventStyles(task.priority)}`}
@@ -341,8 +456,8 @@ export default function CalendarPage() {
                                   {format(new Date(task.startTime), "ha")} {task.title}
                                 </div>
                               ))}
-                              {tasksForDay.length > 3 && (
-                                <div className="text-[10px] text-muted-foreground">+{tasksForDay.length - 3} more</div>
+                              {tasksForDay.length > 5 && (
+                                <div className="text-[10px] text-muted-foreground">+{tasksForDay.length - 5} more</div>
                               )}
                             </div>
                           </button>
@@ -413,19 +528,28 @@ function getInitials(name?: string | null, email?: string | null) {
 
 type AiRecommendation = {
   task: Task;
+  suggestedDate?: string;
   suggestedStart: Date;
   suggestedEnd: Date;
   reason: string;
 };
 
-function buildAiRecommendations(tasks: Task[], anchorDate: Date): AiRecommendation[] {
+function buildAiRecommendations(
+  tasks: Task[],
+  anchorDate: Date,
+  preferences: { startHour: number; endHour: number; allowWeekends: boolean }
+): AiRecommendation[] {
   const selectedDayStart = startOfDaySafe(anchorDate);
   const todayStart = startOfDaySafe(new Date());
-  const planningStart = selectedDayStart > todayStart ? selectedDayStart : todayStart;
+  const planningStart = moveToNextWorkday(
+    selectedDayStart > todayStart ? selectedDayStart : todayStart,
+    preferences.allowWeekends
+  );
   const planningEnd = addDays(planningStart, 7);
+  const perDayCounts = new Map<string, number>();
 
   const scoped = tasks
-    .filter((task) => task.status !== "completed")
+    .filter((task) => !isTaskCompleted(task.status))
     .filter((task) => new Date(task.endTime) >= planningStart && new Date(task.startTime) < planningEnd)
     .sort((a, b) => {
       const priorityDiff = getPriorityScore(b.priority) - getPriorityScore(a.priority);
@@ -434,42 +558,55 @@ function buildAiRecommendations(tasks: Task[], anchorDate: Date): AiRecommendati
     });
 
   const recommendations: AiRecommendation[] = [];
-  let cursor = setDayTime(new Date(planningStart), 9, 0);
+  let cursorDate = new Date(planningStart);
 
   for (const task of scoped) {
     const durationMinutes = getTaskDurationMinutes(task);
-    cursor = alignToQuarterHour(cursor);
+    const maxPerDay = getDailyTaskCap(task.priority);
+    let plannedDay = moveToNextWorkday(new Date(cursorDate), preferences.allowWeekends);
 
-    if (cursor.getHours() >= 20) {
-      cursor = setDayTime(addDays(cursor, 1), 9, 0);
+    while (true) {
+      plannedDay = moveToNextWorkday(plannedDay, preferences.allowWeekends);
+      const key = plannedDay.toISOString().slice(0, 10);
+      const count = perDayCounts.get(key) ?? 0;
+      if (count < maxPerDay) {
+        perDayCounts.set(key, count + 1);
+        const suggestedStart = alignToQuarterHour(
+          setDayTime(plannedDay, getSuggestedHour(task.priority, count, preferences.startHour, preferences.endHour), 0)
+        );
+        const suggestedEnd = addMinutes(suggestedStart, durationMinutes);
+
+        recommendations.push({
+          task,
+          suggestedDate: suggestedStart.toISOString(),
+          suggestedStart,
+          suggestedEnd,
+          reason: `Prioritized as ${task.priority}; due ${format(new Date(task.endTime), "EEE, MMM d h:mm a")}.`,
+        });
+
+        cursorDate = new Date(plannedDay);
+        break;
+      }
+
+      plannedDay = addDays(plannedDay, 1);
     }
-
-    const suggestedStart = new Date(cursor);
-    const suggestedEnd = addMinutes(suggestedStart, durationMinutes);
-
-    if (suggestedEnd.getHours() >= 22) {
-      const movedStart = setDayTime(addDays(suggestedStart, 1), 9, 0);
-      recommendations.push({
-        task,
-        suggestedStart: movedStart,
-        suggestedEnd: addMinutes(movedStart, durationMinutes),
-        reason: `Prioritized as ${task.priority}; due ${format(new Date(task.endTime), "EEE, MMM d h:mm a")}.`,
-      });
-      cursor = addMinutes(movedStart, durationMinutes + 15);
-      continue;
-    }
-
-    recommendations.push({
-      task,
-      suggestedStart,
-      suggestedEnd,
-      reason: `Prioritized as ${task.priority}; due ${format(new Date(task.endTime), "EEE, MMM d h:mm a")}.`,
-    });
-
-    cursor = addMinutes(suggestedEnd, 15);
   }
 
   return recommendations;
+}
+
+function getDailyTaskCap(priority: Task["priority"]) {
+  if (priority === "urgent" || priority === "high") return 1;
+  if (priority === "medium") return 2;
+  return 4;
+}
+
+function getSuggestedHour(priority: Task["priority"], slotIndex: number, startHour: number, endHour: number) {
+  const boundedEnd = Math.max(startHour + 2, endHour);
+  if (priority === "urgent") return startHour;
+  if (priority === "high") return Math.min(startHour + 2, boundedEnd - 1);
+  if (priority === "medium") return slotIndex === 0 ? Math.min(startHour + 4, boundedEnd - 1) : Math.min(startHour + 6, boundedEnd - 1);
+  return Math.min(startHour + 1 + slotIndex * 2, boundedEnd - 1);
 }
 
 function getTaskDurationMinutes(task: Task): number {
@@ -500,4 +637,90 @@ function setDayTime(date: Date, hours: number, minutes: number) {
   const copy = new Date(date);
   copy.setHours(hours, minutes, 0, 0);
   return copy;
+}
+
+function moveToNextWorkday(date: Date, allowWeekends: boolean) {
+  const copy = startOfDaySafe(date);
+  if (allowWeekends) {
+    return copy;
+  }
+  while (isWeekend(copy)) {
+    copy.setDate(copy.getDate() + 1);
+  }
+  return copy;
+}
+
+function isWeekend(date: Date) {
+  const day = date.getDay();
+  return day === 0 || day === 6;
+}
+
+function mapPrioritizedTasksToRecommendations(
+  recommendations: AIPrioritizeItem[],
+  tasks: Task[],
+  anchorDate: Date
+): AiRecommendation[] {
+  const taskById = new Map(tasks.map((task) => [task.id, task]));
+
+  return recommendations
+    .map((item) => {
+      const task = taskById.get(item.taskId);
+      if (!task) return null;
+      if (isTaskCompleted(task.status)) return null;
+
+      const dateAnchor = item.suggestedDate ? new Date(item.suggestedDate) : anchorDate;
+      const baseStart = parseSuggestedTime(item.suggestedTime, dateAnchor);
+      const suggestedStart = alignToQuarterHour(baseStart);
+      const suggestedEnd = addMinutes(suggestedStart, Math.max(30, item.duration || getTaskDurationMinutes(task)));
+
+      return {
+        task,
+        suggestedStart,
+        suggestedEnd,
+        suggestedDate: item.suggestedDate ?? suggestedStart.toISOString(),
+        reason: item.reasoning,
+      } satisfies AiRecommendation;
+    })
+    .filter(Boolean) as AiRecommendation[];
+}
+
+function isTaskCompleted(status: string) {
+  return status.trim().toLowerCase() === "completed";
+}
+
+function parseSuggestedTime(value: string, anchorDate: Date) {
+  const [hoursString, minutesString] = value.split(":");
+  const hours = Number(hoursString);
+  const minutes = Number(minutesString);
+  const next = new Date(anchorDate);
+  next.setHours(Number.isFinite(hours) ? hours : 9, Number.isFinite(minutes) ? minutes : 0, 0, 0);
+  return next;
+}
+
+function mapCachedPlanViewToRecommendations(
+  items: CachedAiPlanViewItem[],
+  tasks: Task[]
+): AiRecommendation[] {
+  const taskById = new Map(tasks.map((task) => [task.id, task]));
+
+  return items
+    .map((item) => {
+      const task = taskById.get(item.taskId);
+      if (!task) return null;
+
+      const suggestedStart = new Date(item.suggestedStartIso);
+      const suggestedEnd = new Date(item.suggestedEndIso);
+      if (Number.isNaN(suggestedStart.getTime()) || Number.isNaN(suggestedEnd.getTime())) {
+        return null;
+      }
+
+      return {
+        task,
+        suggestedDate: suggestedStart.toISOString(),
+        suggestedStart,
+        suggestedEnd,
+        reason: item.reason,
+      } satisfies AiRecommendation;
+    })
+    .filter(Boolean) as AiRecommendation[];
 }

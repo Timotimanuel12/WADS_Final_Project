@@ -12,6 +12,7 @@ import {
   RefreshCw, Play, Settings, CheckCircle, Clock, BrainCircuit, AlertCircle, Circle, Loader2
 } from "lucide-react";
 import { profileApi, tasksApi, type Task } from "@/lib/api-client";
+import { aiApi } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -25,6 +26,9 @@ export default function DashboardPage() {
   const [displayName, setDisplayName] = React.useState("there");
   const [profilePhotoUrl, setProfilePhotoUrl] = React.useState<string | null>(null);
   const [profileInitials, setProfileInitials] = React.useState("AL");
+  const [smartRecommendations, setSmartRecommendations] = React.useState<string[]>([]);
+  const [burnoutRisk, setBurnoutRisk] = React.useState<{ riskLevel: string; workload: number; suggestedBreakTime: number; recommendations: string[] } | null>(null);
+  const [aiLoading, setAiLoading] = React.useState(false);
 
   const loadTasks = React.useCallback(async () => {
     setLoading(true);
@@ -39,6 +43,29 @@ export default function DashboardPage() {
   }, []);
 
   React.useEffect(() => { loadTasks(); }, [loadTasks]);
+
+  React.useEffect(() => {
+    if (tasks.length === 0) return;
+
+    const run = async () => {
+      setAiLoading(true);
+      try {
+        const [recommendations, burnout] = await Promise.all([
+          aiApi.recommendations(),
+          aiApi.burnout(),
+        ]);
+        setSmartRecommendations(recommendations.recommendations.slice(0, 3));
+        setBurnoutRisk(burnout.analysis);
+      } catch {
+        setSmartRecommendations([]);
+        setBurnoutRisk(null);
+      } finally {
+        setAiLoading(false);
+      }
+    };
+
+    void run();
+  }, [tasks]);
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -173,6 +200,47 @@ export default function DashboardPage() {
             <StatCard icon={<Clock className="text-amber-500 h-5 w-5" />} title="Incomplete" value={String(incompleteTasks.length)} subtext="Pending tasks" />
             <StatCard icon={<CheckCircle className="text-green-500 h-5 w-5" />} title="Completed" value={String(completedTasks.length)} subtext="Done" />
             <StatCard icon={<BrainCircuit className="text-indigo-500 h-5 w-5" />} title="Total" value={String(tasks.length)} subtext="All tasks" />
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">AI Smart Recommendation</CardTitle>
+                <CardDescription>Quick next-step guidance based on your current workload.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                {aiLoading ? (
+                  <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading AI insights...</div>
+                ) : smartRecommendations.length > 0 ? (
+                  smartRecommendations.map((item) => (
+                    <p key={item} className="rounded-md border bg-muted/30 px-3 py-2">{item}</p>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground">AI recommendations will appear here once your task list is available.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Burnout Check</CardTitle>
+                <CardDescription>Groq checks your workload and suggests break time.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                {burnoutRisk ? (
+                  <>
+                    <p>Risk level: <span className="font-semibold">{burnoutRisk.riskLevel}</span></p>
+                    <p>Workload: <span className="font-semibold">{burnoutRisk.workload}%</span></p>
+                    <p>Suggested break: <span className="font-semibold">{burnoutRisk.suggestedBreakTime} min</span></p>
+                    {burnoutRisk.recommendations.slice(0, 2).map((item) => (
+                      <p key={item} className="rounded-md border bg-muted/30 px-3 py-2">{item}</p>
+                    ))}
+                  </>
+                ) : (
+                  <p className="text-muted-foreground">Burnout analysis will appear here after Groq runs.</p>
+                )}
+              </CardContent>
+            </Card>
           </div>
 
           <Card>

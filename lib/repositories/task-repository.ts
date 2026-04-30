@@ -67,3 +67,20 @@ export async function updateTaskById(id: string, data: Prisma.TaskUpdateInput, d
 export async function deleteTaskById(id: string, db: DbClient = prisma) {
   return db.task.delete({ where: { id } });
 }
+
+export async function findAllByUserId(userId: string, db: DbClient = prisma) {
+  return db.task.findMany({
+    where: { userId },
+    orderBy: { updatedAt: "desc" },
+  });
+}
+
+// Export an object for convenience
+export const taskRepository = {
+  findTasksByUserId,
+  findTaskById,
+  createTask,
+  updateTaskById,
+  deleteTaskById,
+  findAllByUserId,
+};

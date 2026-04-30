@@ -70,7 +70,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (checkingAuth) {
     return (
-      <div className="flex h-full items-center justify-center bg-background">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
         <div className="flex items-center gap-3 text-indigo-700 font-semibold">
           <span className="inline-block h-5 w-5 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin" />
           Checking session...

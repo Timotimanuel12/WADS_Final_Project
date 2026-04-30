@@ -11,7 +11,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Loader2, ArrowUpDown, CheckCircle2, AlertCircle, Link2, Paperclip, Upload, X } from "lucide-react";
-import { tasksApi, type Task, type TaskStatus, type TaskPriority } from "@/lib/api-client";
+import { aiApi, tasksApi, type Task, type TaskStatus, type TaskPriority } from "@/lib/api-client";
 
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 
@@ -86,6 +86,8 @@ export default function ActivitiesPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState<ToastState>(null);
+  const [quickCapture, setQuickCapture] = useState("");
+  const [parsingAi, setParsingAi] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const loadTasks = useCallback(async () => {
@@ -113,6 +115,7 @@ export default function ActivitiesPage() {
   function openNew() {
     setEditingId(null);
     setForm(EMPTY_FORM);
+    setQuickCapture("");
     setError("");
     setDialogOpen(true);
   }
@@ -121,6 +124,7 @@ export default function ActivitiesPage() {
     const task = tasks.find((t) => t.id === id);
     if (!task) return;
     setEditingId(id);
+    setQuickCapture("");
     setForm({
       title: task.title,
       description: task.description,
@@ -137,6 +141,34 @@ export default function ActivitiesPage() {
     });
     setError("");
     setDialogOpen(true);
+  }
+
+  async function handleParseWithAI() {
+    if (!quickCapture.trim()) {
+      setError("Enter a natural-language task description first.");
+      return;
+    }
+
+    setParsingAi(true);
+    setError("");
+    try {
+      const parsed = await aiApi.parseTask(quickCapture.trim());
+      setForm((current) => ({
+        ...current,
+        title: parsed.task.title ?? current.title,
+        description: parsed.task.description ?? current.description,
+        priority: (parsed.task.priority ?? current.priority) as TaskPriority,
+        category: parsed.task.category ?? current.category,
+        course: parsed.task.course ?? current.course,
+        startTime: parsed.task.startTime ? toDateTimeLocalValue(parsed.task.startTime) : current.startTime,
+        endTime: parsed.task.endTime ? toDateTimeLocalValue(parsed.task.endTime) : current.endTime,
+      }));
+      setToast({ type: "success", message: "Groq filled the task form." });
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setParsingAi(false);
+    }
   }
 
   async function handleSave() {
@@ -381,6 +413,23 @@ export default function ActivitiesPage() {
             <DialogTitle>{editingId ? "Edit Activity" : "New Activity"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
+            {!editingId && (
+              <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
+                <div className="space-y-1">
+                  <Label htmlFor="ai-quick-capture">Quick Capture with Groq</Label>
+                  <Textarea
+                    id="ai-quick-capture"
+                    placeholder='Example: "Study calculus for 2 hours tomorrow at 3pm, high priority, for Math 202"'
+                    value={quickCapture}
+                    onChange={(e) => setQuickCapture(e.target.value)}
+                  />
+                </div>
+                <Button type="button" variant="secondary" onClick={handleParseWithAI} disabled={parsingAi}>
+                  {parsingAi && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Parse with Groq
+                </Button>
+              </div>
+            )}
             <div className="space-y-1">
               <Label htmlFor="act-title">
                 Title <span className="text-destructive">*</span>

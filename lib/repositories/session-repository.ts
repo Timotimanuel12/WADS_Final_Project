@@ -39,3 +39,33 @@ export async function findSessionsByUserId(query: SessionListQuery, db: DbClient
 export async function createSession(data: Prisma.FocusSessionUncheckedCreateInput, db: DbClient = prisma) {
   return db.focusSession.create({ data });
 }
+
+export async function findByUserIdAndDate(
+  userId: string,
+  date: Date,
+  db: DbClient = prisma
+) {
+  const startOfDay = new Date(date);
+  startOfDay.setHours(0, 0, 0, 0);
+  
+  const endOfDay = new Date(date);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  return db.focusSession.findMany({
+    where: {
+      userId,
+      completedAt: {
+        gte: startOfDay,
+        lte: endOfDay,
+      },
+    },
+    orderBy: { completedAt: "desc" },
+  });
+}
+
+// Export an object for convenience
+export const sessionRepository = {
+  findSessionsByUserId,
+  createSession,
+  findByUserIdAndDate,
+};

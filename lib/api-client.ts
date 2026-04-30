@@ -11,17 +11,37 @@ async function getToken(): Promise<string> {
 
 async function apiFetch<T>(
   path: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  timeoutMs = 20000
 ): Promise<T> {
   const token = await getToken();
-  const res = await fetch(path, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      ...(options.headers ?? {}),
-    },
-  });
+  const controller = options.signal ? null : new AbortController();
+  const timeoutId = controller
+    ? setTimeout(() => {
+        controller.abort();
+      }, timeoutMs)
+    : null;
+
+  let res: Response;
+  try {
+    res = await fetch(path, {
+      ...options,
+      signal: options.signal ?? controller?.signal,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        ...(options.headers ?? {}),
+      },
+    });
+  } catch (err) {
+    if (timeoutId) clearTimeout(timeoutId);
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error("Request timed out. Please try again.");
+    }
+    throw err;
+  }
+
+  if (timeoutId) clearTimeout(timeoutId);
 
   // Robust JSON handling so we don't crash on empty/invalid responses
   let rawBody: string | null = null;
@@ -109,6 +129,70 @@ export type UpdateProfileInput = {
   profilePhotoUrl?: string | null;
 };
 
+export type AIPrioritizeItem = {
+  taskId: string;
+  suggestedDate?: string;
+  suggestedTime: string;
+  duration: number;
+  reasoning: string;
+};
+
+export type AIPrioritizePreferences = {
+  preferredHours?: { start: number; end: number };
+  maxSessionsPerDay?: number;
+  breakCadence?: number;
+  allowWeekends?: boolean;
+};
+
+export type AIBurnoutAnalysis = {
+  analysis: {
+    riskLevel: "low" | "medium" | "high";
+    workload: number;
+    suggestedBreakTime: number;
+    recommendations: string[];
+  };
+  stats: {
+    totalHours: number;
+    completedTasks: number;
+    pendingTasks: number;
+    sessionsDone: number;
+  };
+};
+
+export type AIRecommendationsResponse = {
+  recommendations: string[];
+  incompleteTasks: number;
+  completedTasks: number;
+};
+
+export type AIInsightsResponse = {
+  insights: Array<{
+    pattern: string;
+    productivity: number;
+    suggestions: string[];
+  }>;
+  stats: {
+    totalTasks: number;
+    completed: number;
+    pending: number;
+    highPriority: number;
+    mediumPriority: number;
+    lowPriority: number;
+  };
+};
+
+export type AITaskParseResponse = {
+  task: {
+    title: string;
+    description?: string;
+    priority?: TaskPriority;
+    category?: string;
+    course?: string;
+    startTime?: string;
+    endTime?: string;
+  };
+};
+
 export const sessionsApi = {
   list: () => apiFetch<FocusSessionRecord[]>("/api/sessions?page=1&pageSize=200"),
   create: (input: CreateSessionInput) =>
@@ -133,4 +217,16 @@ export const profileApi = {
 
 export const accountApi = {
   remove: () => apiFetch<{ deleted: boolean }>("/api/account", { method: "DELETE" }),
+};
+
+export const aiApi = {
+  prioritize: (preferences?: AIPrioritizePreferences) =>
+    apiFetch<{ recommendations: AIPrioritizeItem[]; taskCount: number }>("/api/ai/prioritize", {
+      method: "POST",
+      body: JSON.stringify({ preferences: preferences ?? {} }),
+    }, 15000),
+  recommendations: () => apiFetch<AIRecommendationsResponse>("/api/ai/recommendations", {}, 8000),
+  burnout: () => apiFetch<AIBurnoutAnalysis>("/api/ai/burnout", {}, 8000),
+  insights: () => apiFetch<AIInsightsResponse>("/api/ai/insights"),
+  parseTask: (text: string) => apiFetch<AITaskParseResponse>("/api/ai/parse-task", { method: "POST", body: JSON.stringify({ text }) }),
 };

@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   LayoutDashboard, Calendar as CalendarIcon, ListTodo, Timer, 
-  Plus, Moon, Sun, BrainCircuit, LogOut, Settings
+    Plus, Moon, Sun, BrainCircuit, LogOut, Settings, MessageCircle
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "next-themes"; 
@@ -85,6 +85,14 @@ export default function Sidebar() {
             onClick={() => router.push('/focus-timer')}
           >
             <Timer className="mr-2 h-4 w-4" /> Focus Timer
+          </Button>
+
+          <Button
+            variant={pathname === '/ai-chat' ? 'secondary' : 'ghost'}
+            className="w-full justify-start font-semibold"
+            onClick={() => router.push('/ai-chat')}
+          >
+            <MessageCircle className="mr-2 h-4 w-4" /> AI Chat
           </Button>
         </div>
 

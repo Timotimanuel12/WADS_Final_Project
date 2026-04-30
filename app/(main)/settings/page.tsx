@@ -3,6 +3,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import ProfileSettings from "@/components/ProfileSettings";
+import AISettingsPanel from "@/components/AISettingsPanel";
 import { BrainCircuit, Bell, Shield, User } from "lucide-react";
 
 export default function SettingsPage() {
@@ -48,15 +49,7 @@ export default function SettingsPage() {
             </TabsContent>
 
             <TabsContent value="ai" className="m-0 focus-visible:outline-none focus-visible:ring-0">
-              <Card className="shadow-sm border-muted">
-                <CardHeader>
-                  <CardTitle>AI Auto-Plan Settings</CardTitle>
-                  <CardDescription>Configure how the AI manages your calendar.</CardDescription>
-                </CardHeader>
-                <CardContent className="h-40 flex items-center justify-center text-muted-foreground border-t">
-                  AI Configurations coming soon.
-                </CardContent>
-              </Card>
+              <AISettingsPanel />
             </TabsContent>
 
             <TabsContent value="notifications" className="m-0 focus-visible:outline-none focus-visible:ring-0">
