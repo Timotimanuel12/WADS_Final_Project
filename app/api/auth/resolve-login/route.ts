@@ -1,10 +1,16 @@
 import { type NextRequest } from "next/server";
 import { err, ok } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: NextRequest) {
+  const limited = enforceRateLimit(request, "auth-resolve-login", { windowMs: 10 * 60_000, max: 10 });
+  if (limited.limited) {
+    return err("Too many login lookups. Please wait and try again.", 429);
+  }
+
   let body: unknown;
   try {
     body = await request.json();

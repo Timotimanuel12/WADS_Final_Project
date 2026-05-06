@@ -8,6 +8,7 @@ import {
   serializeTask,
   updateOwnedTask,
 } from "@/lib/services/task-service";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 
@@ -43,6 +44,11 @@ export async function GET(request: NextRequest, { params }: Params) {
 export async function PUT(request: NextRequest, { params }: Params) {
   const auth = await requireAuth(request);
   if (isAuthError(auth)) return auth;
+
+  const limited = enforceRateLimit(request, "tasks-update", { windowMs: 60_000, max: 60 }, auth.userId);
+  if (limited.limited) {
+    return err("Too many task updates. Please wait and try again.", 429);
+  }
 
   let body: unknown;
   try {
@@ -135,6 +141,11 @@ export async function PUT(request: NextRequest, { params }: Params) {
 export async function DELETE(request: NextRequest, { params }: Params) {
   const auth = await requireAuth(request);
   if (isAuthError(auth)) return auth;
+
+  const limited = enforceRateLimit(request, "tasks-delete", { windowMs: 60_000, max: 40 }, auth.userId);
+  if (limited.limited) {
+    return err("Too many task deletions. Please wait and try again.", 429);
+  }
 
   try {
     const { id } = await params;

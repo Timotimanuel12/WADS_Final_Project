@@ -51,7 +51,7 @@ describe('AuthGuard Component', () => {
     // Simulate user login
     if (authCallback) {
       await act(async () => {
-        authCallback({ uid: '123', email: 'test@example.com' });
+        authCallback!({ uid: '123', email: 'test@example.com' });
       });
     }
 

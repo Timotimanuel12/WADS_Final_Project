@@ -10,6 +10,8 @@ import {
   validateTaskTitle,
   validateUrl,
   validateMimeType,
+  validateEnum,
+  validateDataUrl,
   ValidationError,
 } from "@/lib/validation";
 
@@ -259,7 +261,6 @@ describe("Security Validation", () => {
     });
 
     it("should enforce enum validation strictly", () => {
-      const { validateEnum } = require("@/lib/validation");
       expect(() => validateEnum("invalid", ["active", "inactive"], "status")).toThrow(
         ValidationError
       );
@@ -272,7 +273,6 @@ describe("Security Validation", () => {
     });
 
     it("should reject large data URLs", () => {
-      const { validateDataUrl } = require("@/lib/validation");
       const huge = "data:image/png;base64," + "a".repeat(20000000);
       expect(() => validateDataUrl(huge)).toThrow(ValidationError);
     });

@@ -9,9 +9,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  RefreshCw, Play, Settings, CheckCircle, Clock, BrainCircuit, AlertCircle, Circle, Loader2
+  RefreshCw, Play, Settings, CheckCircle, Clock, BrainCircuit, AlertCircle, Circle, Loader2, Flame, TrendingUp
 } from "lucide-react";
-import { profileApi, tasksApi, type Task } from "@/lib/api-client";
+import { analyticsApi, profileApi, tasksApi, type AnalyticsResponse, type Task } from "@/lib/api-client";
 import { aiApi } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
@@ -28,6 +28,7 @@ export default function DashboardPage() {
   const [profileInitials, setProfileInitials] = React.useState("AL");
   const [smartRecommendations, setSmartRecommendations] = React.useState<string[]>([]);
   const [burnoutRisk, setBurnoutRisk] = React.useState<{ riskLevel: string; workload: number; suggestedBreakTime: number; recommendations: string[] } | null>(null);
+  const [analytics, setAnalytics] = React.useState<AnalyticsResponse | null>(null);
   const [aiLoading, setAiLoading] = React.useState(false);
 
   const loadTasks = React.useCallback(async () => {
@@ -50,15 +51,18 @@ export default function DashboardPage() {
     const run = async () => {
       setAiLoading(true);
       try {
-        const [recommendations, burnout] = await Promise.all([
+        const [recommendations, burnout, analyticsData] = await Promise.all([
           aiApi.recommendations(),
           aiApi.burnout(),
+          analyticsApi.get(),
         ]);
         setSmartRecommendations(recommendations.recommendations.slice(0, 3));
         setBurnoutRisk(burnout.analysis);
+        setAnalytics(analyticsData);
       } catch {
         setSmartRecommendations([]);
         setBurnoutRisk(null);
+        setAnalytics(null);
       } finally {
         setAiLoading(false);
       }
@@ -200,6 +204,60 @@ export default function DashboardPage() {
             <StatCard icon={<Clock className="text-amber-500 h-5 w-5" />} title="Incomplete" value={String(incompleteTasks.length)} subtext="Pending tasks" />
             <StatCard icon={<CheckCircle className="text-green-500 h-5 w-5" />} title="Completed" value={String(completedTasks.length)} subtext="Done" />
             <StatCard icon={<BrainCircuit className="text-indigo-500 h-5 w-5" />} title="Total" value={String(tasks.length)} subtext="All tasks" />
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2"><Flame className="h-4 w-4 text-orange-500" /> Focus Streak</CardTitle>
+                <CardDescription>Shows how consistently you have been logging focus time.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-2 gap-4 text-sm">
+                <div className="rounded-lg border bg-muted/30 p-4">
+                  <p className="text-muted-foreground text-xs uppercase tracking-wide">Current</p>
+                  <p className="text-3xl font-bold tabular-nums">{analytics?.streak.current ?? 0}</p>
+                  <p className="text-xs text-muted-foreground">days</p>
+                </div>
+                <div className="rounded-lg border bg-muted/30 p-4">
+                  <p className="text-muted-foreground text-xs uppercase tracking-wide">Longest</p>
+                  <p className="text-3xl font-bold tabular-nums">{analytics?.streak.longest ?? 0}</p>
+                  <p className="text-xs text-muted-foreground">days</p>
+                </div>
+                <div className="col-span-2 text-xs text-muted-foreground">
+                  {analytics?.streak.active
+                    ? "You have an active streak going. Keep the chain alive."
+                    : "No active streak right now. One small session starts the next one."}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2"><TrendingUp className="h-4 w-4 text-blue-500" /> Monthly Trend</CardTitle>
+                <CardDescription>Monthly focus minutes and completed-task trend.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {(analytics?.trends ?? []).length > 0 ? (
+                  analytics!.trends.map((month) => {
+                    const maxMinutes = Math.max(...analytics!.trends.map((item) => item.focusMinutes), 1);
+                    const width = `${Math.max(8, Math.round((month.focusMinutes / maxMinutes) * 100))}%`;
+                    return (
+                      <div key={month.month} className="space-y-1">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>{month.label}</span>
+                          <span>{month.focusMinutes} min · {month.completedTasks} completed</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-muted overflow-hidden">
+                          <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500" style={{ width }} />
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-sm text-muted-foreground">Monthly trend data will appear after a few focus sessions.</p>
+                )}
+              </CardContent>
+            </Card>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">

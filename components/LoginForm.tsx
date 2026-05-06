@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Book, Chrome, Eye, EyeOff, Lock, LogIn, User, UserPlus } from "lucide-react";
 import { auth } from "@/lib/firebase";
 import {
@@ -14,7 +14,7 @@ import {
   updateProfile,
 } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const USERNAME_REGEX = /^[a-zA-Z0-9._-]{3,30}$/;
 
@@ -92,6 +92,7 @@ export default function LoginForm() {
   const [major, setMajor] = useState("");
   const [error, setError] = useState("");
   const [forgotMessage, setForgotMessage] = useState("");
+  const [sessionNotice, setSessionNotice] = useState("");
   const [loading, setLoading] = useState(false);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [isSwitchingMode, setIsSwitchingMode] = useState(false);
@@ -99,8 +100,10 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [usernameAvailability, setUsernameAvailability] = useState<UsernameAvailability>("idle");
+  const failedAuthAttemptsRef = useRef(0);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const fetchSessionWithTimeout = useCallback(async (idToken: string) => {
     const controller = new AbortController();
@@ -129,7 +132,7 @@ export default function LoginForm() {
     const res = await fetchSessionWithTimeout(idToken);
 
     if (!res.ok) {
-      router.replace("/login");
+      router.replace("/login?reason=session-expired");
       return;
     }
 
@@ -145,6 +148,16 @@ export default function LoginForm() {
 
     router.replace("/profile-setup");
   }, [fetchSessionWithTimeout, router]);
+
+  useEffect(() => {
+    const reason = searchParams.get("reason");
+    if (reason === "session-expired") {
+      setSessionNotice("Your session expired. Please sign in again to continue.");
+      return;
+    }
+
+    setSessionNotice("");
+  }, [searchParams]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -214,16 +227,19 @@ export default function LoginForm() {
           const payload = (await res.json()) as { error?: string };
           throw new Error(payload.error ?? "Failed to complete profile setup");
         }
+        failedAuthAttemptsRef.current = 0;
       } else {
         const resolvedEmail = await resolveIdentifierToEmail(identifier);
 
         await signInWithEmailAndPassword(auth, resolvedEmail, password);
+        failedAuthAttemptsRef.current = 0;
       }
 
       await resolvePostAuthRoute();
     } catch (err: unknown) {
       console.error(err);
-      setError(toUserFacingAuthError(err, isRegisterMode));
+      failedAuthAttemptsRef.current += 1;
+      setError(`${toUserFacingAuthError(err, isRegisterMode)}${failedAuthAttemptsRef.current >= 3 ? " You've had several failed attempts, so the app may temporarily slow things down. Wait a few minutes before retrying." : ""}`);
     } finally {
       setLoading(false);
     }
@@ -237,9 +253,11 @@ export default function LoginForm() {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
+      failedAuthAttemptsRef.current = 0;
       await resolvePostAuthRoute();
     } catch (err: unknown) {
       console.error(err);
+      failedAuthAttemptsRef.current += 1;
       if (err instanceof FirebaseError) {
         if (err.code === "auth/account-exists-with-different-credential") {
           const email = (err.customData?.email as string | undefined) ?? "";
@@ -248,7 +266,7 @@ export default function LoginForm() {
             try {
               const methods = await fetchSignInMethodsForEmail(auth, email);
               if (methods.includes("password")) {
-                setError("This email is already registered with password. Please sign in with email and password.");
+                setError("This email is already registered with email and password. Please sign in that way first, then you can keep using that account method.");
               } else if (methods.length > 0) {
                 setError("This email is already linked to another sign-in method. Please use that method first.");
               } else {
@@ -543,6 +561,11 @@ export default function LoginForm() {
               </button>
             </div>
           )}
+            {sessionNotice && (
+              <div className="bg-blue-50 text-blue-700 p-3 rounded-lg text-sm mb-4 text-center">
+                {sessionNotice}
+              </div>
+            )}
         </div>
 
         {isRegisterMode && (
@@ -593,6 +616,9 @@ export default function LoginForm() {
           <Chrome size={18} />
           Continue with Google
         </button>
+        <p className="text-xs text-gray-500 text-center leading-5">
+          If your email already uses password sign-in, use that method first. If Google shows an account conflict, the account is already tied to another sign-in method.
+        </p>
       </form>
 
       <p className="text-sm text-center text-gray-500 mt-4">

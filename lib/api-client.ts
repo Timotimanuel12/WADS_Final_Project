@@ -181,6 +181,40 @@ export type AIInsightsResponse = {
   };
 };
 
+export type AnalyticsResponse = {
+  tasks: {
+    total: number;
+    completed: number;
+    pending: number;
+    inProgress: number;
+    completionRate: number;
+  };
+  focusTime: {
+    totalMinutes: number;
+    totalHours: number;
+    weeklyMinutes: number;
+    sessionCount: number;
+  };
+  byPriority: {
+    low: number;
+    medium: number;
+    high: number;
+    urgent: number;
+  };
+  trends: Array<{
+    month: string;
+    label: string;
+    focusMinutes: number;
+    completedTasks: number;
+    sessions: number;
+  }>;
+  streak: {
+    current: number;
+    longest: number;
+    active: boolean;
+  };
+};
+
 export type AITaskParseResponse = {
   task: {
     title: string;
@@ -229,4 +263,8 @@ export const aiApi = {
   burnout: () => apiFetch<AIBurnoutAnalysis>("/api/ai/burnout", {}, 8000),
   insights: () => apiFetch<AIInsightsResponse>("/api/ai/insights"),
   parseTask: (text: string) => apiFetch<AITaskParseResponse>("/api/ai/parse-task", { method: "POST", body: JSON.stringify({ text }) }),
+};
+
+export const analyticsApi = {
+  get: () => apiFetch<AnalyticsResponse>("/api/analytics"),
 };

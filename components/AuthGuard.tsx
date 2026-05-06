@@ -31,12 +31,17 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [checkingAuth, setCheckingAuth] = useState(true);
 
+  const redirectToLogin = (reason?: string) => {
+    const next = encodeURIComponent(pathname || "/dashboard");
+    const reasonPart = reason ? `&reason=${encodeURIComponent(reason)}` : "";
+    router.replace(`/login?next=${next}${reasonPart}`);
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       const run = async () => {
         if (!user) {
-          const next = encodeURIComponent(pathname || "/dashboard");
-          router.replace(`/login?next=${next}`);
+          redirectToLogin();
           setCheckingAuth(false);
           return;
         }
@@ -55,7 +60,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
             return;
           }
         } catch {
-          router.replace("/login");
+          redirectToLogin("session-expired");
           return;
         } finally {
           setCheckingAuth(false);

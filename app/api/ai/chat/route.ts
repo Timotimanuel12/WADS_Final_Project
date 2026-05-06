@@ -3,6 +3,7 @@ import { requireAuth, isAuthError } from "@/lib/auth-middleware";
 import { err, ok } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
 import geminiAIService from "@/lib/services/groq-ai-service";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -14,25 +15,14 @@ const MAX_MESSAGES_PER_WINDOW = 8;
 const MAX_MESSAGE_LENGTH = 2000;
 const MAX_CONVERSATION_MESSAGES = 20;
 
-const chatRequestLog = new Map<string, number[]>();
-
-function isRateLimited(userId: string) {
-  const now = Date.now();
-  const timestamps = (chatRequestLog.get(userId) ?? []).filter((timestamp) => now - timestamp < CHAT_WINDOW_MS);
-
-  if (timestamps.length >= MAX_MESSAGES_PER_WINDOW) {
-    chatRequestLog.set(userId, timestamps);
-    return true;
-  }
-
-  timestamps.push(now);
-  chatRequestLog.set(userId, timestamps);
-  return false;
-}
-
 export async function POST(request: NextRequest) {
   const auth = await requireAuth(request);
   if (isAuthError(auth)) return auth;
+
+  const limited = enforceRateLimit(request, "ai-chat", { windowMs: CHAT_WINDOW_MS, max: MAX_MESSAGES_PER_WINDOW }, auth.userId);
+  if (limited.limited) {
+    return err("Too many AI chat messages. Please wait a minute and try again.", 429);
+  }
 
   try {
     const body = await request.json().catch(() => ({}));
@@ -48,10 +38,6 @@ export async function POST(request: NextRequest) {
       return err("Message too long (max 2000 chars)", 400);
     }
 
-    if (isRateLimited(auth.userId)) {
-      return err("Too many AI chat messages. Please wait a minute and try again.", 429);
-    }
-
     let conversation = null;
     if (conversationId) {
       conversation = await prisma.aIChatConversation.findFirst({
@@ -61,7 +47,7 @@ export async function POST(request: NextRequest) {
       if (!conversation) return err("Conversation not found", 404);
     } else {
       conversation = await prisma.aIChatConversation.create({
-        data: { userId: auth.userId, title: message.slice(0, 50) || "New Conversation" },
+        data: { userId: auth.userId, title: buildConversationTitle(message) },
         include: { messages: true },
       });
     }
@@ -89,6 +75,34 @@ export async function POST(request: NextRequest) {
   } catch {
     return err("Failed to process chat message", 500);
   }
+}
+
+function buildConversationTitle(message: string) {
+  const cleaned = message.replace(/\s+/g, " ").trim();
+  if (!cleaned) return "New Conversation";
+
+  const sentenceMatch = cleaned.match(/^.+?[.!?](?=\s|$)/);
+  const sentence = sentenceMatch?.[0] ?? cleaned;
+  const compact = collapseRepeatedWords(sentence).trim();
+  const candidate = compact || cleaned;
+
+  if (candidate.length <= 40) {
+    return candidate;
+  }
+
+  return `${candidate.slice(0, 37).trimEnd()}...`;
+}
+
+function collapseRepeatedWords(value: string) {
+  let result = value;
+  let previous = "";
+
+  while (result !== previous) {
+    previous = result;
+    result = result.replace(/\b([\w'-]+)(\s+\1\b)+/gi, "$1");
+  }
+
+  return result;
 }
 
 export async function PATCH(request: NextRequest) {

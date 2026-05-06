@@ -2,6 +2,7 @@ import { type NextRequest } from "next/server";
 import { requireAuth, isAuthError } from "@/lib/auth-middleware";
 import { err, ok } from "@/lib/api-response";
 import { completeUserProfile, ensureAndGetUserProfile } from "@/lib/services/profile-service";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 function sanitizeProfileBody(body: Record<string, unknown>) {
   const username = typeof body.username === "string" ? body.username.trim() : "";
@@ -23,6 +24,11 @@ export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
   if (isAuthError(auth)) return auth;
 
+  const limited = enforceRateLimit(request, "profile-get", { windowMs: 60_000, max: 60 }, auth.userId);
+  if (limited.limited) {
+    return err("Too many profile requests. Please wait and try again.", 429);
+  }
+
   try {
     const profile = await ensureAndGetUserProfile(auth);
     return ok(profile);
@@ -34,6 +40,11 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const auth = await requireAuth(request);
   if (isAuthError(auth)) return auth;
+
+  const limited = enforceRateLimit(request, "profile-put", { windowMs: 10 * 60_000, max: 20 }, auth.userId);
+  if (limited.limited) {
+    return err("Too many profile updates. Please wait and try again.", 429);
+  }
 
   let body: unknown;
   try {

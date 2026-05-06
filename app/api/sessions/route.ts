@@ -8,11 +8,17 @@ import {
   serializeSession,
   validateOwnedTaskReference,
 } from "@/lib/services/session-service";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 // GET /api/sessions — list all focus sessions for the authenticated user
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
   if (isAuthError(auth)) return auth;
+
+  const limited = enforceRateLimit(request, "sessions-list", { windowMs: 60_000, max: 60 }, auth.userId);
+  if (limited.limited) {
+    return err("Too many session requests. Please wait and try again.", 429);
+  }
 
   try {
     const filters = buildSessionFilterQuery(request.nextUrl.searchParams);
@@ -27,6 +33,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const auth = await requireAuth(request);
   if (isAuthError(auth)) return auth;
+
+  const limited = enforceRateLimit(request, "sessions-create", { windowMs: 60_000, max: 20 }, auth.userId);
+  if (limited.limited) {
+    return err("Too many focus session submissions. Please wait and try again.", 429);
+  }
 
   let body: unknown;
   try {

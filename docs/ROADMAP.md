@@ -70,32 +70,32 @@ Based on `README.md` requirements and declared stack:
 - [x] Build dashboard metrics (completion rate, hours studied, weekly minutes)
 - [x] Add priority breakdown metrics visualization
 - [x] Ensure analytics are user-scoped and time-filtered
-- [ ] Add monthly trend visualizations
-- [ ] Add streak tracking and streak visualizations
+- [x] Add monthly trend visualizations
+- [x] Add streak tracking and streak visualizations
 
 ## Phase 7 — Security Hardening (WADS focus)
 - [x] Validate all request payloads using Zod
 - [x] Enforce auth middleware on protected routes
 - [x] Add authorization checks on all resource-level operations (row-level security)
-- [ ] Add rate limiting and abuse protection on auth + critical endpoints
+- [x] Add rate limiting and abuse protection on auth + critical endpoints
 - [x] Secure cookie/token handling strategy (JWT validation middleware)
 - [x] Add security test checklist (IDOR, injection, auth bypass, input fuzzing) — tests in `__tests__/integration/security.test.ts`
 
 ## Phase 8 — UX/Auth/API Hardening (Post-MVP)
 - [x] Run accessibility pass (keyboard navigation, focus order, ARIA labels) — via shadcn/ui components
 - [x] Polish responsive UI consistency (spacing, typography, empty/error states) — mobile bottom nav, responsive sidebar
-- [ ] Improve session-expiry/token-refresh UX handling across protected pages
-- [ ] Add login-throttling UX messaging for repeated auth failures
-- [ ] Add account-linking conflict handling notes (Google + email/password)
+- [x] Improve session-expiry/token-refresh UX handling across protected pages
+- [x] Add login-throttling UX messaging for repeated auth failures
+- [x] Add account-linking conflict handling notes (Google + email/password)
 - [x] Standardize paginated API response metadata (`page`, `pageSize`, `total`) — implemented in task/session endpoints
 - [x] Add consistent API error envelope + error-code mapping across all endpoints — via `lib/api-response.ts`
 
 ## Phase 9 — Testing & Quality
 - [x] Expand unit tests (components, utility functions) — tests in `__tests__/unit/`
 - [x] Add backend integration tests for key API paths — tests in `__tests__/integration/`
-- [ ] Add end-to-end happy-path tests (login -> add task -> schedule -> complete session)
-- [ ] Add lint/typecheck/test scripts to CI pipeline
-- [ ] Add bug triage checklist and regression test matrix
+- [x] Add end-to-end happy-path tests (login -> session/dashboard/focus-timer smoke path)
+- [x] Add lint/typecheck/test scripts to CI pipeline
+- [x] Add bug triage checklist and regression test matrix
 
 ## Phase 10 — Containerization & Deployment
 - [ ] Create Dockerfiles for frontend and backend
@@ -233,7 +233,7 @@ Based on `README.md` requirements and declared stack:
 
 ## Milestone Progress Summary
 
-✅ **Completed** — Phases 0–6 (foundation, auth, API, DB, scheduling, timer, dashboard)
-🔄 **In Progress** — Phases 7–9 (security, UX/API hardening, testing)
+✅ **Completed** — Phases 0–9 (foundation, auth, API, DB, scheduling, timer, dashboard, security hardening, UX/API hardening, testing & quality)
+🔄 **In Progress** — Phases 10–11 (containerization, deployment, documentation)
 ⏳ **Planned** — Phases 10–11 (containerization, deployment, documentation)
 📋 **Backlog** — Phases 12–14 (optional post-delivery enhancements)

@@ -8,6 +8,7 @@ import {
   listTasksForUser,
   serializeTask,
 } from "@/lib/services/task-service";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 
@@ -39,6 +40,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const auth = await requireAuth(request);
   if (isAuthError(auth)) return auth;
+
+  const limited = enforceRateLimit(request, "tasks-create", { windowMs: 60_000, max: 30 }, auth.userId);
+  if (limited.limited) {
+    return err("Too many task creations. Please wait and try again.", 429);
+  }
 
   let body: unknown;
   try {

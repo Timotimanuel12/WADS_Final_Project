@@ -98,6 +98,8 @@ export default function AIChatPage() {
       if (data.data?.length > 0 && !currentConversationId) {
         setCurrentConversationId(data.data[0].id);
         await loadConversation(data.data[0].id, token);
+      } else if ((data.data?.length ?? 0) === 0) {
+        setMessages([]);
       }
     } catch (error) {
       console.error("Error fetching conversations:", error);
@@ -115,9 +117,9 @@ export default function AIChatPage() {
       });
       if (!response.ok) throw new Error("Failed to load conversation");
       const data = await response.json();
-      const msgs = data.data?.messages || [];
+      const msgs = (data.data?.messages ?? []) as Array<{ role: Message["role"]; content: string; createdAt?: string }>;
       setMessages(
-        msgs.map((msg: any) => ({
+        msgs.map((msg) => ({
           role: msg.role,
           content: msg.content,
           createdAt: msg.createdAt,
@@ -295,7 +297,9 @@ export default function AIChatPage() {
                   }}
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{conv.title}</p>
+                    <p className="text-sm font-medium truncate" title={formatConversationTitle(conv.title)}>
+                      {formatConversationTitle(conv.title, 18)}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(conv.updatedAt).toLocaleDateString()}
                     </p>
@@ -330,12 +334,12 @@ export default function AIChatPage() {
 
         {/* Sidebar Info */}
         <div className="p-4 border-t border-border text-xs text-muted-foreground space-y-2">
-          <p className="font-semibold">💡 AI Assistant Tips:</p>
+          <p className="font-semibold">Meet Jessalyne:</p>
           <ul className="space-y-1 list-disc list-inside">
-            <li>Ask for task recommendations</li>
-            <li>Get study strategies</li>
-            <li>Discuss productivity tips</li>
-            <li>Break down complex projects</li>
+            <li>Get encouragement after completing tasks</li>
+            <li>Ask how to start a task right now</li>
+            <li>Ask for help adding a clear, scoped task</li>
+            <li>Chat casually when you need a quick reset</li>
           </ul>
         </div>
       </div>
@@ -346,10 +350,10 @@ export default function AIChatPage() {
         <div className="border-b border-border p-4 bg-muted/20">
           <h1 className="text-xl font-bold flex items-center gap-2">
             <MessageCircle className="w-5 h-5" />
-            HelpImTooLazy AI Assistant
+            Jessalyne
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Your personal productivity and study coach
+            Your witty productivity coach, encouragement buddy, and playful chat companion
           </p>
           <p className="mt-2 inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground">
             <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
@@ -359,15 +363,29 @@ export default function AIChatPage() {
 
         {/* Messages */}
         <ScrollArea className="flex-1 min-h-0 h-full p-4">
-          <div className="space-y-4 max-w-2xl">
+          <div className="space-y-4 max-w-2xl pb-8">
             {messages.length === 0 && !loading ? (
-              <div className="flex flex-col items-center justify-center h-96 gap-4 text-center">
-                <MessageCircle className="w-12 h-12 text-muted-foreground" />
-                <div>
-                  <h2 className="text-lg font-semibold">Start a conversation!</h2>
-                  <p className="text-sm text-muted-foreground max-w-xs">
-                    Ask me anything about productivity, task management, study strategies, or getting things done.
-                  </p>
+              <div className="space-y-4 pt-2">
+                <Card className="max-w-2xl border-dashed bg-muted/30 p-5">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                      <MessageCircle className="h-4 w-4" />
+                      Welcome to Jessalyne
+                    </div>
+                    <p className="text-sm leading-7 text-foreground">
+                      Hi, I’m Jessalyne. I’m the one who’ll cheer you on, gently roast your procrastination, and help you turn chaos into a plan.
+                      Need help starting, adding a task, celebrating a win, or just a quick funny chat? I’m here.
+                    </p>
+                  </div>
+                </Card>
+                <div className="flex flex-col items-center justify-center gap-4 text-center py-10">
+                  <MessageCircle className="w-12 h-12 text-muted-foreground" />
+                  <div>
+                    <h2 className="text-lg font-semibold">Start a conversation!</h2>
+                    <p className="text-sm text-muted-foreground max-w-xs">
+                      Jessalyne can help with motivation, task-start steps, task-writing help, study strategy, or a casual chat.
+                    </p>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -455,7 +473,7 @@ export default function AIChatPage() {
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask me anything..."
+              placeholder="Talk to Jessalyne about tasks, motivation, or anything light..."
               disabled={loading}
               className="flex-1"
               maxLength={2000}
@@ -500,4 +518,32 @@ export default function AIChatPage() {
       </Dialog>
     </div>
   );
+}
+
+function formatConversationTitle(title: string, maxLength = 18) {
+  const normalized = title.replace(/\s+/g, " ").trim();
+  if (!normalized) return "New Conversation";
+
+  const sentenceMatch = normalized.match(/^.+?[.!?](?=\s|$)/);
+  const sentence = sentenceMatch?.[0] ?? normalized;
+  const compact = collapseRepeatedWords(sentence).trim();
+  const candidate = compact || normalized;
+
+  if (candidate.length <= maxLength) {
+    return candidate;
+  }
+
+  return `${candidate.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`;
+}
+
+function collapseRepeatedWords(value: string) {
+  let result = value;
+  let previous = "";
+
+  while (result !== previous) {
+    previous = result;
+    result = result.replace(/\b([\w'-]+)(\s+\1\b)+/gi, "$1");
+  }
+
+  return result;
 }

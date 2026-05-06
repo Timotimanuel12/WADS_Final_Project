@@ -17,6 +17,9 @@ export async function getAnalyticsForUser(userId: string) {
   const weeklySessions = userSessions.filter((s) => s.completedAt >= oneWeekAgo);
   const weeklyMinutes = weeklySessions.reduce((acc, s) => acc + s.durationMinutes, 0);
 
+  const monthlyTrends = buildMonthlyTrends(userTasks, userSessions);
+  const streak = buildFocusStreak(userSessions);
+
   const byPriority = {
     low: userTasks.filter((t) => t.priority === "low").length,
     medium: userTasks.filter((t) => t.priority === "medium").length,
@@ -39,5 +42,98 @@ export async function getAnalyticsForUser(userId: string) {
       sessionCount: userSessions.length,
     },
     byPriority,
+    trends: monthlyTrends,
+    streak,
   };
+}
+
+function buildMonthlyTrends(userTasks: Array<{ status: string; updatedAt: Date }>, userSessions: Array<{ completedAt: Date; durationMinutes: number }>) {
+  const months = Array.from({ length: 6 }, (_, index) => {
+    const date = startOfMonth(addMonths(new Date(), -(5 - index)));
+    return {
+      month: date.toISOString().slice(0, 7),
+      label: date.toLocaleDateString([], { month: "short" }),
+      focusMinutes: 0,
+      completedTasks: 0,
+      sessions: 0,
+    };
+  });
+
+  const monthByKey = new Map(months.map((month) => [month.month, month]));
+
+  for (const session of userSessions) {
+    const key = session.completedAt.toISOString().slice(0, 7);
+    const bucket = monthByKey.get(key);
+    if (bucket) {
+      bucket.focusMinutes += session.durationMinutes;
+      bucket.sessions += 1;
+    }
+  }
+
+  for (const task of userTasks) {
+    if (task.status !== "completed") continue;
+    const key = task.updatedAt.toISOString().slice(0, 7);
+    const bucket = monthByKey.get(key);
+    if (bucket) {
+      bucket.completedTasks += 1;
+    }
+  }
+
+  return months;
+}
+
+function buildFocusStreak(userSessions: Array<{ completedAt: Date }>) {
+  const daySet = new Set(userSessions.map((session) => startOfDay(session.completedAt).toISOString().slice(0, 10)));
+  const today = startOfDay(new Date());
+
+  let current = 0;
+  for (let cursor = new Date(today); daySet.has(cursor.toISOString().slice(0, 10)); cursor.setDate(cursor.getDate() - 1)) {
+    current += 1;
+  }
+
+  let longest = 0;
+  let streak = 0;
+  const sortedDays = [...daySet].sort();
+  for (let index = 0; index < sortedDays.length; index += 1) {
+    const previous = sortedDays[index - 1];
+    const currentDay = sortedDays[index];
+    if (!previous || isNextDay(previous, currentDay)) {
+      streak += 1;
+    } else {
+      streak = 1;
+    }
+    longest = Math.max(longest, streak);
+  }
+
+  return {
+    current,
+    longest,
+    active: current > 0,
+  };
+}
+
+function startOfMonth(date: Date) {
+  const copy = new Date(date);
+  copy.setDate(1);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+}
+
+function addMonths(date: Date, offset: number) {
+  const copy = new Date(date);
+  copy.setMonth(copy.getMonth() + offset);
+  return copy;
+}
+
+function startOfDay(date: Date) {
+  const copy = new Date(date);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+}
+
+function isNextDay(previousDay: string, nextDay: string) {
+  const previous = new Date(previousDay);
+  const next = new Date(nextDay);
+  previous.setDate(previous.getDate() + 1);
+  return previous.toISOString().slice(0, 10) === next.toISOString().slice(0, 10);
 }
