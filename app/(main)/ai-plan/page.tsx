@@ -156,10 +156,10 @@ export default function AiPlanPage() {
       </header>
 
       <div className="p-8 max-w-5xl mx-auto w-full space-y-6">
-        <Card className="border-indigo-200 bg-indigo-50/60">
+        <Card className="border-indigo-200 bg-indigo-50/60 dark:border-indigo-800 dark:bg-indigo-950/40">
           <CardHeader>
-            <CardTitle className="text-base">How to read this</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-base text-indigo-900 dark:text-indigo-300">How to read this</CardTitle>
+            <CardDescription className="text-indigo-700 dark:text-indigo-200">
               Start from rank #1 and follow down the list. Each item includes a suggested start/end time and why it was positioned there.
             </CardDescription>
           </CardHeader>

@@ -8,14 +8,24 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
-  RefreshCw, Play, Settings, CheckCircle, Clock, BrainCircuit, AlertCircle, Circle, Loader2, Flame, TrendingUp
+  RefreshCw, Play, Settings, CheckCircle, Clock, BrainCircuit, AlertCircle, Circle, Loader2, Flame, TrendingUp, MoreVertical
 } from "lucide-react";
 import { analyticsApi, profileApi, tasksApi, type AnalyticsResponse, type Task } from "@/lib/api-client";
 import { aiApi } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+
+const GRADIENTS = [
+  { name: "Blue", value: "from-blue-600 to-indigo-600" },
+  { name: "Purple", value: "from-purple-600 to-indigo-600" },
+  { name: "Emerald", value: "from-emerald-500 to-teal-600" },
+  { name: "Rose", value: "from-rose-500 to-red-600" },
+  { name: "Amber", value: "from-amber-500 to-orange-600" },
+  { name: "Midnight", value: "from-slate-800 to-slate-900" }
+];
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -30,6 +40,34 @@ export default function DashboardPage() {
   const [burnoutRisk, setBurnoutRisk] = React.useState<{ riskLevel: string; workload: number; suggestedBreakTime: number; recommendations: string[] } | null>(null);
   const [analytics, setAnalytics] = React.useState<AnalyticsResponse | null>(null);
   const [aiLoading, setAiLoading] = React.useState(false);
+  const [cardGradient, setCardGradient] = React.useState("from-blue-600 to-indigo-600");
+  const [customColor, setCustomColor] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const saved = localStorage.getItem("dashboardGreetingColor");
+    if (saved) {
+      if (saved.startsWith("#")) {
+        setCustomColor(saved);
+        setCardGradient("");
+      } else {
+        setCardGradient(saved);
+        setCustomColor(null);
+      }
+    }
+  }, []);
+
+  const handlePresetChange = (gradient: string) => {
+    setCardGradient(gradient);
+    setCustomColor(null);
+    localStorage.setItem("dashboardGreetingColor", gradient);
+  };
+
+  const handleCustomColor = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const hex = e.target.value;
+    setCustomColor(hex);
+    setCardGradient("");
+    localStorage.setItem("dashboardGreetingColor", hex);
+  };
 
   const loadTasks = React.useCallback(async () => {
     setLoading(true);
@@ -166,7 +204,40 @@ export default function DashboardPage() {
             </div>
           </header>
 
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-6 md:p-8 text-white flex flex-col lg:flex-row justify-between lg:items-center gap-6 shadow-md">
+          <div 
+            className={`rounded-xl p-6 md:p-8 text-white flex flex-col lg:flex-row justify-between lg:items-center gap-6 shadow-md relative group transition-colors duration-500 ${!customColor ? `bg-gradient-to-r ${cardGradient}` : ''}`}
+            style={customColor ? { background: `linear-gradient(135deg, ${customColor}, ${customColor}cc)` } : undefined}
+          >
+            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 hover:text-white rounded-full h-8 w-8">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {GRADIENTS.map((g) => (
+                    <DropdownMenuItem key={g.name} onClick={() => handlePresetChange(g.value)} className="cursor-pointer">
+                      <div className={`w-4 h-4 rounded-full bg-gradient-to-r ${g.value} mr-2 border`} />
+                      {g.name}
+                    </DropdownMenuItem>
+                  ))}
+                  <div className="relative">
+                    <input 
+                      type="color" 
+                      value={customColor || "#3b82f6"}
+                      onChange={handleCustomColor}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-20"
+                      title="Pick a custom color"
+                    />
+                    <DropdownMenuItem className="cursor-pointer">
+                      <div className="w-4 h-4 rounded-full bg-gradient-to-tr from-red-500 via-green-500 to-blue-500 mr-2 border" />
+                      Custom Color...
+                    </DropdownMenuItem>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             <div>
               <p className="font-medium text-blue-100 mb-1">
                 {urgentTasks.length > 0 ? `${urgentTasks.length} urgent task${urgentTasks.length > 1 ? "s require" : " requires"} attention.` : "You're all caught up!"}
