@@ -318,7 +318,9 @@ export default function LoginForm() {
 
   const checkUsernameAvailability = useCallback(async (candidate: string): Promise<boolean> => {
     const res = await fetch(`/api/auth/check-username?username=${encodeURIComponent(candidate)}`);
-    if (!res.ok) return false;
+    if (!res.ok) {
+      throw new Error("username availability check failed");
+    }
 
     const payload = (await res.json()) as {
       data?: { available?: boolean; valid?: boolean };

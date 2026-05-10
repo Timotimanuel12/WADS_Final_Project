@@ -98,10 +98,10 @@ Based on `README.md` requirements and declared stack:
 - [x] Add bug triage checklist and regression test matrix
 
 ## Phase 10 — Containerization & Deployment
-- [ ] Create Dockerfiles for frontend and backend
-- [ ] Create Docker Compose for local full-stack runs
+- [x] Create Dockerfiles for frontend and backend
+- [x] Create Docker Compose for local full-stack runs
 - [x] Configure production env variables and secrets handling — `.env.example` in place
-- [ ] Deploy frontend (e.g., Vercel) and backend (selected host)
+- [x] Deploy frontend (e.g., Vercel) and backend (selected host)
 - [ ] Run post-deploy smoke tests and rollback plan
 
 ## Phase 11 — Documentation & Final Delivery
