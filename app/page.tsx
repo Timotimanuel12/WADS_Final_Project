@@ -44,21 +44,21 @@ function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
 // ─── Floating geometric shapes (hero decoration) ───────────────────────────
 function Shapes() {
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-      <div className="absolute -right-20 top-1/4 h-72 w-72 rounded-full bg-indigo-600 opacity-90"
+    <div className="pointer-events-none absolute inset-0 overflow-hidden z-0" aria-hidden>
+      <div className="absolute -right-20 top-1/4 h-72 w-72 rounded-full bg-indigo-600 opacity-10 sm:opacity-40 lg:opacity-90"
         style={{ animation: "floatA 8s ease-in-out infinite" }} />
-      <div className="absolute right-40 top-10 h-20 w-20 rounded-lg bg-amber-400"
+      <div className="absolute right-40 top-10 h-20 w-20 rounded-lg bg-amber-400 opacity-20 sm:opacity-50 lg:opacity-100"
         style={{ transform: "rotate(15deg)", animation: "floatB 6s ease-in-out infinite" }} />
-      <div className="absolute right-64 top-48 h-10 w-10 rounded-full bg-slate-900"
+      <div className="absolute right-64 top-48 h-10 w-10 rounded-full bg-slate-900 opacity-10 sm:opacity-40 lg:opacity-100"
         style={{ animation: "floatC 7s ease-in-out infinite" }} />
-      <div className="absolute right-16 top-80 h-24 w-24 rounded-full border-8 border-white bg-transparent"
+      <div className="absolute right-16 top-80 h-24 w-24 rounded-full border-8 border-white bg-transparent opacity-20 lg:opacity-100"
         style={{ animation: "floatA 9s ease-in-out infinite reverse" }} />
-      <div className="absolute right-80 top-36 h-14 w-14 rounded-xl bg-purple-500 opacity-80"
+      <div className="absolute right-80 top-36 h-14 w-14 rounded-xl bg-purple-500 opacity-10 lg:opacity-80"
         style={{ transform: "rotate(-20deg)", animation: "floatB 5s ease-in-out infinite reverse" }} />
-      <div className="absolute left-1/3 top-8 h-4 w-4 rounded-full bg-indigo-400 opacity-60" />
-      <div className="absolute left-1/3 top-16 h-3 w-3 rounded-full bg-purple-400 opacity-50"
+      <div className="absolute left-1/3 top-8 h-4 w-4 rounded-full bg-indigo-400 opacity-30 lg:opacity-60" />
+      <div className="absolute left-1/3 top-16 h-3 w-3 rounded-full bg-purple-400 opacity-30 lg:opacity-50"
         style={{ marginLeft: 20 }} />
-      <div className="absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-gradient-to-br from-indigo-200/60 to-purple-200/40 blur-2xl"
+      <div className="absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-gradient-to-br from-indigo-200/60 to-purple-200/40 blur-2xl opacity-50 lg:opacity-100"
         style={{ animation: "floatC 10s ease-in-out infinite" }} />
     </div>
   );
@@ -172,12 +172,12 @@ export default function HomePage() {
               </div>
               <span className="text-lg font-bold tracking-tight">HelpImTooLazy</span>
             </div>
-            <div className="hidden items-center gap-8 text-sm font-medium text-slate-600 sm:flex">
+            <div className="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
               <a href="#features" className="transition-colors hover:text-indigo-600">Features</a>
               <a href="#how-it-works" className="transition-colors hover:text-indigo-600">How it works</a>
               <a href="#reviews" className="transition-colors hover:text-indigo-600">Reviews</a>
             </div>
-            <Button asChild className="rounded-full bg-indigo-600 hover:bg-indigo-700 shadow-sm shadow-indigo-600/30">
+            <Button asChild className="rounded-full bg-indigo-600 hover:bg-indigo-700 shadow-sm shadow-indigo-600/30 px-4 sm:px-6">
               <Link href="/login">Get Started</Link>
             </Button>
           </div>
@@ -186,14 +186,14 @@ export default function HomePage() {
         {/* HERO */}
         <section className="relative min-h-[90vh] overflow-hidden">
           <Shapes />
-          <div className="relative mx-auto flex min-h-[90vh] max-w-6xl flex-col justify-center px-6 py-20">
+          <div className="relative z-10 mx-auto flex min-h-[90vh] max-w-6xl flex-col justify-center px-6 py-20">
             <div className="max-w-2xl">
               <Badge variant="outline" className="mb-6 gap-1.5 rounded-full border-indigo-100 bg-indigo-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-indigo-600 fade-up">
                 <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
                 Your Personal Study Companion
               </Badge>
 
-              <h1 className="fade-up delay-1 text-5xl font-bold leading-[1.12] tracking-tight sm:text-6xl lg:text-7xl">
+              <h1 className="fade-up delay-1 text-4xl font-bold leading-[1.12] tracking-tight sm:text-6xl lg:text-7xl">
                 Focus smarter.<br />
                 <span className="text-indigo-600">Study harder.</span><br />
                 Achieve more.
@@ -224,7 +224,7 @@ export default function HomePage() {
         {/* STATS */}
         <section className="border-y border-slate-100 bg-white">
           <div className="mx-auto max-w-6xl px-6 py-16">
-            <div className="grid grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
               {stats.map((s) => (
                 <div key={s.label} className="text-center">
                   <p className="text-4xl font-bold text-indigo-600">
@@ -244,8 +244,8 @@ export default function HomePage() {
               <Badge variant="outline" className="rounded-full border-indigo-100 bg-indigo-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-indigo-600">
                 Features
               </Badge>
-              <h2 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
-                Everything you need to <span className="text-indigo-600">stay on track</span>
+              <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-5xl">
+                Everything you need to <br className="sm:hidden" /><span className="text-indigo-600">stay on track</span>
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-base text-slate-500">
                 Built for students who want clarity, not complexity. Simple tools, real results.
@@ -274,8 +274,8 @@ export default function HomePage() {
               <Badge variant="outline" className="rounded-full border-purple-100 bg-purple-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-purple-600">
                 How It Works
               </Badge>
-              <h2 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
-                From chaos to clarity <span className="text-indigo-600">in 4 steps</span>
+              <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-5xl">
+                From chaos to clarity <br className="sm:hidden" /><span className="text-indigo-600">in 4 steps</span>
               </h2>
             </div>
             <div className="grid gap-6 lg:grid-cols-2">
@@ -301,7 +301,7 @@ export default function HomePage() {
               <Badge variant="outline" className="rounded-full border-amber-100 bg-amber-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-amber-600">
                 Reviews
               </Badge>
-              <h2 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
+              <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-5xl">
                 Loved by <span className="text-indigo-600">real students</span>
               </h2>
               <p className="mx-auto mt-4 max-w-lg text-base text-slate-500">
@@ -345,7 +345,7 @@ export default function HomePage() {
           <div className="pointer-events-none absolute -bottom-20 -right-20 h-80 w-80 rounded-full bg-white/5" />
           <div className="pointer-events-none absolute right-1/4 top-8 h-20 w-20 rounded-full bg-amber-400/30" />
           <div className="relative mx-auto max-w-3xl px-6 text-center">
-            <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-5xl">
               Ready to build your best semester?
             </h2>
             <p className="mx-auto mt-5 max-w-xl text-lg text-indigo-200">

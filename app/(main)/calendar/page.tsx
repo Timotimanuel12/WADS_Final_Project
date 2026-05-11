@@ -91,7 +91,7 @@ export default function CalendarPage() {
 
   const monthSections = React.useMemo(() => {
     const baseMonth = startOfMonth(currentDate);
-    return Array.from({ length: 6 }, (_, offset) => {
+    return Array.from({ length: 1 }, (_, offset) => {
       const monthDate = addMonths(baseMonth, offset);
       const monthStart = startOfMonth(monthDate);
       const monthEnd = endOfMonth(monthDate);
@@ -132,24 +132,44 @@ export default function CalendarPage() {
   }
 
   const renderWeekDetails = () => (
-    <div className="flex-1 min-h-0 flex flex-col overflow-y-auto bg-background p-6">
-      <div className="mb-6 rounded-lg border bg-muted/20 p-3">
-        <div className="grid grid-cols-7 gap-2">
-          {weekDays.map((day) => (
-            <button
-              type="button"
-              key={day.toISOString()}
-              onClick={() => setCurrentDate(day)}
-              className={`rounded-md border px-2 py-2 text-center transition-colors ${
-                isSameDay(day, currentDate)
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-background hover:bg-muted"
-              }`}
-            >
-              <p className="text-[11px] font-semibold uppercase tracking-wide">{format(day, "EEE")}</p>
-              <p className="text-sm font-bold mt-0.5">{format(day, "d")}</p>
-            </button>
-          ))}
+    <div className="flex-1 min-h-0 flex flex-col overflow-y-auto bg-background p-4 sm:p-6">
+      <div className="mb-6 rounded-lg border bg-muted/20 p-2 sm:p-3">
+        <div className="grid grid-cols-7 gap-1 sm:gap-2">
+          {weekDays.map((day) => {
+            const dayTasksList = visibleTasks.filter((task) => {
+              const d = startOfDaySafe(day);
+              return d >= startOfDaySafe(new Date(task.startTime)) && d <= startOfDaySafe(new Date(task.endTime));
+            });
+            const hasUrgent = dayTasksList.some(t => t.priority === "urgent");
+            const hasTasks = dayTasksList.length > 0;
+            const dotColor = isSameDay(day, currentDate) 
+              ? "bg-primary-foreground" 
+              : hasUrgent ? "bg-red-500" : "bg-primary";
+
+            return (
+              <button
+                type="button"
+                key={day.toISOString()}
+                onClick={() => setCurrentDate(day)}
+                className={`rounded-md border py-1.5 px-1 sm:px-2 flex flex-col items-center justify-center min-h-[52px] transition-colors ${
+                  isSameDay(day, currentDate)
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-background hover:bg-muted"
+                }`}
+              >
+                <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide shrink-0">
+                  <span className="hidden sm:inline">{format(day, "EEE")}</span>
+                  <span className="sm:hidden">{format(day, "EEEEE")}</span>
+                </p>
+                <p className="text-xs sm:text-sm font-bold mt-1 leading-none shrink-0">{format(day, "d")}</p>
+                {hasTasks ? (
+                  <div className={`mt-1 w-1.5 h-1.5 rounded-full shrink-0 ${dotColor}`} />
+                ) : (
+                  <div className="mt-1 w-1.5 h-1.5 shrink-0" />
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -258,17 +278,15 @@ export default function CalendarPage() {
           </div>
 
           <Card className="flex-1 overflow-hidden flex flex-col bg-background shadow-sm border min-h-0">
-            <TabsContent value="month" className="m-0 flex-1 flex flex-col min-h-0">
-              <div className="flex-1 overflow-y-auto p-3 space-y-6 min-h-0">
+            <TabsContent value="month" className="m-0 flex-1 flex-col min-h-0 data-[state=active]:flex">
+              <div className="flex-1 overflow-y-auto min-h-0">
                 {monthSections.map((section) => (
                   <section key={section.monthDate.toISOString()} className="rounded-lg border overflow-hidden">
-                    <div className="px-4 py-3 bg-muted/40 border-b text-sm font-semibold">
-                      {format(section.monthDate, "MMMM yyyy")}
-                    </div>
                     <div className="grid grid-cols-7 border-b bg-muted/20">
-                      {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                        <div key={day} className="py-2 text-center text-sm font-semibold text-muted-foreground border-r last:border-r-0">
-                          {day}
+                      {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, idx) => (
+                        <div key={day} className="py-2 text-center text-xs sm:text-sm font-semibold text-muted-foreground border-r last:border-r-0">
+                          <span className="hidden sm:inline">{day}</span>
+                          <span className="sm:hidden">{["S", "M", "T", "W", "T", "F", "S"][idx]}</span>
                         </div>
                       ))}
                     </div>
@@ -286,10 +304,10 @@ export default function CalendarPage() {
                               setCurrentDate(day);
                               setView("week");
                             }}
-                            className="bg-background p-2 min-h-[110px] hover:bg-muted/10 transition-colors text-left"
+                            className="bg-background p-1.5 sm:p-2 min-h-[80px] sm:min-h-[110px] hover:bg-muted/10 transition-colors text-left flex flex-col"
                           >
                             <span
-                              className={`text-sm font-medium ${
+                              className={`text-sm font-medium shrink-0 ${
                                 isToday(day)
                                   ? "bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center"
                                   : isSameMonth(day, section.monthDate)
@@ -321,7 +339,7 @@ export default function CalendarPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="week" className="m-0 flex flex-1 min-h-0">
+            <TabsContent value="week" className="m-0 flex-1 flex-col min-h-0 data-[state=active]:flex">
               {renderWeekDetails()}
             </TabsContent>
 

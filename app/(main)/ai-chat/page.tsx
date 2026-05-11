@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { auth } from "@/lib/firebase";
 import { DEFAULT_AI_SETTINGS, loadAISettings, type AISettings } from "@/lib/ai-preferences";
-import { Loader2, Send, Plus, MessageCircle, Trash2, Pencil, Sparkles } from "lucide-react";
+import { Loader2, Send, Plus, MessageCircle, Trash2, Pencil, Sparkles, Menu, X, ChevronLeft } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -39,6 +39,7 @@ export default function AIChatPage() {
   const [renameConversationId, setRenameConversationId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [renameLoading, setRenameLoading] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -253,16 +254,35 @@ export default function AIChatPage() {
 
   if (loadingConversations) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-full min-h-[50vh]">
         <Loader2 className="w-8 h-8 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="flex h-full overflow-hidden bg-background relative w-full">
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="absolute inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar - Conversations */}
-      <div className="w-64 border-r border-border bg-muted/30 flex min-h-0 flex-col">
+      <div className={`absolute inset-y-0 left-0 z-50 w-64 transform bg-background border-r border-border transition-transform duration-200 ease-in-out md:relative md:translate-x-0 md:bg-muted/30 flex flex-col min-h-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        {/* Mobile close button */}
+        <div className="absolute top-1/2 -right-4 -translate-y-1/2 md:hidden z-50">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="rounded-full w-8 h-8 bg-background shadow-md border-border" 
+            onClick={() => setSidebarOpen(false)}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+        </div>
         <div className="p-4 border-b border-border">
           <Button
             onClick={createNewConversation}
@@ -345,25 +365,39 @@ export default function AIChatPage() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden relative">
         {/* Header */}
         <div className="border-b border-border p-4 bg-muted/20">
-          <h1 className="text-xl font-bold flex items-center gap-2">
-            <MessageCircle className="w-5 h-5" />
-            Jessalyne
-          </h1>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="icon"
+              className="md:hidden shrink-0"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+            <h1 className="text-xl font-bold flex items-center gap-2">
+              <MessageCircle className="w-5 h-5" />
+              Jessalyne
+            </h1>
+          </div>
           <p className="text-sm text-muted-foreground mt-1">
             Your witty productivity coach, encouragement buddy, and playful chat companion
           </p>
-          <p className="mt-2 inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground">
-            <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
-            {aiSettings.promptStyle} tone · {aiSettings.maxResponseLength} replies · {aiSettings.studyMode} mode
+          <p className="mt-2 inline-flex flex-wrap items-center gap-1.5 rounded-full border bg-background px-3 py-1 text-[10px] sm:text-xs text-muted-foreground">
+            <Sparkles className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
+            <span>{aiSettings.promptStyle} tone</span>
+            <span>·</span>
+            <span>{aiSettings.maxResponseLength} replies</span>
+            <span>·</span>
+            <span>{aiSettings.studyMode} mode</span>
           </p>
         </div>
 
         {/* Messages */}
-        <ScrollArea className="flex-1 min-h-0 h-full p-4">
-          <div className="space-y-4 max-w-2xl pb-8">
+        <ScrollArea className="flex-1 min-h-0 h-full p-2 sm:p-4">
+          <div className="space-y-4 max-w-2xl pb-8 mx-auto w-full">
             {messages.length === 0 && !loading ? (
               <div className="space-y-4 pt-2">
                 <Card className="max-w-2xl border-dashed bg-muted/30 p-5">
@@ -427,7 +461,7 @@ export default function AIChatPage() {
                         </ReactMarkdown>
                       </div>
                     ) : (
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                     )}
                     {message.createdAt && (
                       <p
