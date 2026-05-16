@@ -327,8 +327,8 @@ export default function ActivitiesPage() {
     });
 
   return (
-    <main className="flex-1 flex flex-col h-full bg-muted/5 overflow-y-auto w-full">
-      <header className="px-8 py-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b bg-background">
+    <main className="flex-1 flex flex-col h-full bg-muted/5 overflow-y-auto w-full overflow-x-hidden">
+      <header className="px-4 md:px-6 lg:px-8 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b bg-background">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Activities</h1>
           <p className="text-muted-foreground mt-1">Manage your academic, work, and personal projects.</p>
@@ -338,17 +338,17 @@ export default function ActivitiesPage() {
         </Button>
       </header>
 
-      <div className="p-8 max-w-7xl mx-auto w-full space-y-6">
+      <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6 min-w-0">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-background p-2 rounded-lg border shadow-sm">
-          <Tabs defaultValue="All" className="w-full sm:w-auto" onValueChange={setFilter}>
-            <TabsList className="grid w-full grid-cols-4 sm:w-[400px]">
+          <Tabs defaultValue="All" className="w-full min-w-0" onValueChange={setFilter}>
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="All">All</TabsTrigger>
               <TabsTrigger value="Pending">Pending</TabsTrigger>
               <TabsTrigger value="In Progress">Active</TabsTrigger>
               <TabsTrigger value="Completed">Done</TabsTrigger>
             </TabsList>
           </Tabs>
-          <div className="w-full sm:w-56">
+          <div className="w-full sm:w-56 shrink-0">
             <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
               <SelectTrigger>
                 <div className="flex items-center gap-2">
@@ -372,7 +372,7 @@ export default function ActivitiesPage() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {filtered.map((task) => (
                 <ActivityCard
                   key={task.id}

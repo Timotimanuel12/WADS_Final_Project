@@ -361,7 +361,7 @@ export default function ProfileSettings() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 min-w-0 w-full overflow-x-hidden">
       {/* Avatar Section */}
       <div className="flex items-center gap-6">
         <Avatar className="w-20 h-20 border-2 shadow-sm">
@@ -420,7 +420,7 @@ export default function ProfileSettings() {
         )}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 min-w-0">
         <div className="space-y-2">
           <Label htmlFor="username">Username</Label>
           <Input
@@ -532,7 +532,7 @@ export default function ProfileSettings() {
             <p className="text-xs text-muted-foreground mt-1">Update your account password for email sign-in.</p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 lg:grid-cols-3 min-w-0">
             <div className="space-y-2">
               <Label htmlFor="currentPassword">Current Password</Label>
               <div className="relative">

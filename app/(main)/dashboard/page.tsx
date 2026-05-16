@@ -208,7 +208,7 @@ export default function DashboardPage() {
             className={`rounded-xl p-6 md:p-8 text-white flex flex-col lg:flex-row justify-between lg:items-center gap-6 shadow-md relative group transition-colors duration-500 ${!customColor ? `bg-gradient-to-r ${cardGradient}` : ''}`}
             style={customColor ? { background: `linear-gradient(135deg, ${customColor}, ${customColor}cc)` } : undefined}
           >
-            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+            <div className="absolute top-4 right-4 z-10">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 hover:text-white rounded-full h-8 w-8">

@@ -14,27 +14,27 @@ export default function SettingsPage() {
         <p className="text-muted-foreground mt-1">Manage your account and AI preferences.</p>
       </header>
 
-      <div className="p-8 max-w-5xl mx-auto w-full">
-        <Tabs defaultValue="profile" orientation="vertical" className="flex-col md:flex-row gap-8 w-full">
+      <div className="p-4 lg:p-8 max-w-5xl mx-auto w-full">
+        <Tabs defaultValue="profile" orientation="vertical" className="flex flex-col lg:flex-row gap-4 lg:gap-8 w-full">
           
           {/* Left-side Navigation for Settings */}
-          <TabsList variant="line" className="flex flex-col h-auto bg-transparent space-y-2 w-full md:w-64 items-start justify-start p-0">
-            <TabsTrigger value="profile" className="w-full justify-start gap-2 data-[state=active]:bg-muted/50 data-[state=active]:shadow-none px-4 py-2.5">
-              <User className="w-4 h-4" /> Profile & Account
+          <TabsList variant="line" className="flex flex-row lg:flex-col h-auto bg-transparent w-full lg:w-52 items-start justify-start p-0 overflow-x-auto gap-1 lg:gap-0 lg:space-y-2 shrink-0 border-b lg:border-b-0 pb-2 lg:pb-0">
+            <TabsTrigger value="profile" className="shrink-0 lg:w-full justify-start gap-2 data-[state=active]:bg-muted/50 data-[state=active]:shadow-none px-3 lg:px-4 py-2">
+              <User className="w-4 h-4" /> Profile
             </TabsTrigger>
-            <TabsTrigger value="ai" className="w-full justify-start gap-2 data-[state=active]:bg-muted/50 data-[state=active]:shadow-none px-4 py-2.5">
+            <TabsTrigger value="ai" className="shrink-0 lg:w-full justify-start gap-2 data-[state=active]:bg-muted/50 data-[state=active]:shadow-none px-3 lg:px-4 py-2">
               <BrainCircuit className="w-4 h-4" /> AI Auto-Plan
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="w-full justify-start gap-2 data-[state=active]:bg-muted/50 data-[state=active]:shadow-none px-4 py-2.5">
+            <TabsTrigger value="notifications" className="shrink-0 lg:w-full justify-start gap-2 data-[state=active]:bg-muted/50 data-[state=active]:shadow-none px-3 lg:px-4 py-2">
               <Bell className="w-4 h-4" /> Notifications
             </TabsTrigger>
-            <TabsTrigger value="security" className="w-full justify-start gap-2 data-[state=active]:bg-muted/50 data-[state=active]:shadow-none px-4 py-2.5">
+            <TabsTrigger value="security" className="shrink-0 lg:w-full justify-start gap-2 data-[state=active]:bg-muted/50 data-[state=active]:shadow-none px-3 lg:px-4 py-2">
               <Shield className="w-4 h-4" /> Security
             </TabsTrigger>
           </TabsList>
 
           {/* Right-side Content Panels */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 overflow-hidden">
             <TabsContent value="profile" className="m-0 focus-visible:outline-none focus-visible:ring-0">
               <Card className="shadow-sm border-muted">
                 <CardHeader>
